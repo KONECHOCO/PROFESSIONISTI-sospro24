@@ -1,44 +1,49 @@
-# SOSPro24 Global — Piattaforma Multilingua di Pronto Intervento & Annunci Professionali
+# SOSPro24 Global
 
-**SOSPro24 Global** è una Web App + PWA moderna progettata per mettere in contatto diretto utenti e professioniste/i in diversi Paesi del mondo tramite piccoli annunci classificati per **Paese, Città, Zona/Quartiere e Categoria di servizio**, con particolare focus sul **Pronto Intervento 24/7**.
+Bacheca multilingua (IT, EN, FR, ES, DE) di piccoli annunci di professioniste, classificati per **paese → città → zona → categoria**, con una sezione **SOS pronto intervento**. La piattaforma è solo **intermediario**: non è parte dei contratti tra utente e professionista (vedi Condizioni di Utilizzo nell'app).
 
----
+> **Stato: prototipo dimostrativo.** Non c'è ancora un server: account, annunci e recensioni creati dagli utenti vengono salvati solo nel browser (`localStorage`). Gli annunci precompilati sono **fittizi** e marcati `DEMO` nell'interfaccia.
 
-## 🚀 Avvio Rapido
-
-Nella cartella del progetto (`c:\Users\rebic\Desktop\master\PROFESSIONISTI`):
+## Avvio
 
 ```bash
 npm install
-npm run dev
+npm run dev      # http://localhost:5173
+npm run build    # build di produzione in dist/
 ```
 
-L'applicazione sarà subito accessibile su `http://localhost:5173`.
+## Struttura
 
----
+```
+src/
+  App.jsx                  stato, filtri, ricerca, orchestrazione
+  components/
+    ListingCard.jsx        scheda annuncio
+    ListingModal.jsx       profilo, contatto, recensioni
+    Modals.jsx             accesso, pubblica annuncio, SOS, profilo, condizioni
+    ui.jsx                 Modal accessibile, Avatar, Stelle, Toast
+  lib/utils.js             storage sicuro, date relative, telefono, calcolo valutazioni
+  data/
+    i18n.js                testi base, paesi/città/zone, categorie
+    i18nExtra.js           testi aggiuntivi + sezioni legali (5 lingue)
+    index.js               unisce i testi (italiano come lingua di riserva)
+    mockListings.js        12 annunci DEMO fittizi
+```
 
-## 🌍 Funzionalità Principali Implementate
+## Come sono trattati i dati (importante)
 
-1. **Multi-lingua Internazionale (i18n Istantaneo)**:
-   - Supporto nativo per **Italiano 🇮🇹, English 🇬🇧, Français 🇫🇷, Español 🇪🇸, Deutsch 🇩🇪**.
-   - Traduzione dinamica dell'interfaccia, delle categorie, dei filtri, degli annunci e delle Condizioni Legali.
+- **Valutazione e numero di recensioni sono sempre calcolati** dalle recensioni presenti: non esistono più valori scritti a mano.
+- Gli annunci demo stanno nel codice; nel browser si salva **solo** ciò che crea l'utente (`sospro_ads_v2`, `sospro_reviews_v2`, …). Aggiornare i dati demo non richiede più di svuotare il browser.
+- Nessun annuncio è "verificato" automaticamente: il badge e il filtro compaiono solo se esiste almeno un annuncio con `verified: true` assegnato da un processo reale.
+- I numeri di telefono demo sono fittizi (`+39 000 000 0001`…): i pulsanti Chiama / WhatsApp sono attivi (`tel:` e `wa.me`) solo per gli annunci creati dagli utenti.
+- Una recensione per utente per annuncio, non sul proprio annuncio; i nomi nelle recensioni sono abbreviati ("Maria R.").
 
-2. **Tassonomia Geografica & Categorie Multi-Livello**:
-   - **6 Paesi preconfigurati** (Italia, Francia, Spagna, Regno Unito, Germania, Svizzera) con relative **Città** e **Zone/Quartieri**.
-   - **4 Macro-Categorie** e **19 Sottocategorie**:
-     - *Casa & Urgenze Tecniche* (Idraulico, Elettricista 24/7, Fabbro Apertura Porte, Caldaie & Clima, Tuttofare)
-     - *Servizi alla Persona & Assistenza* (Babysitter, Badante, Infermiera a domicilio, Pulizie, Pet Sitter)
-     - *Benessere, Estetica & Eventi* (Parrucchiera/Make-up, Estetista, Sarta Express, Chef, Fotografa)
-     - *Consulenza, Tech & Formazione* (SOS Tecnico PC/Smartphone, Traduttrice Giurata, Ripetizioni, Consulente Fiscale)
+## Prima del lancio pubblico (da fare)
 
-3. **Popolamento Iniziale Realistico**:
-   - 12 annunci dettagliati già presenti sulla piattaforma con foto, tariffe orarie e diritto di chiamata trasparenti, tempi medi di risposta, badge di verifica e recensioni reali.
-
-4. **Registrazione Obbligatoria, Doppia Modalità (Cliente / Professionista) & Feedback**:
-   - Blocco dei contatti diretti (Telefono / WhatsApp / Messaggio SOS), dell'invio recensioni e della pubblicazione annunci per gli utenti non registrati.
-   - Pulsanti **Accesso Rapido Demo (1-Click)** sia come *Cliente* sia come *Professionista* per testare subito ogni flusso.
-   - Sistema di **Feedback interattivo** con valutazione da 1 a 5 stelle, tag predefiniti (*Puntuale, Intervento Rapido, Prezzo Onesto, Emergenza Risolta*), commenti testuali e pulsante *"Utile 👍"*.
-
-5. **Tutela Legale e Condizioni di Utilizzo (Intermediario Neutrale)**:
-   - Banner permanente + Modal legale completo in 5 lingue + Checkbox obbligatoria in fase di registrazione e pubblicazione annuncio che specifica chiaramente che la piattaforma agisce **esclusivamente come bacheca intermediaria neutrale** ed è esente da responsabilità sulle prestazioni eseguite tra le parti.
-
+1. **Backend e login reale** (es. Supabase o Firebase): email verificata, password/magic link, database condiviso per annunci e recensioni, regole di sicurezza lato server.
+2. **Verifica professionisti**: documento d'identità, P.IVA/albo professionale, poi assegnazione manuale di `verified`.
+3. **Moderazione**: le segnalazioni oggi vengono solo salvate (`sospro_reports_v2`); serve una dashboard admin.
+4. **Revisione legale** di Condizioni e Privacy (GDPR, DSA, normativa consumatori per ogni Paese) e pagina Privacy/Cookie dedicata.
+5. **Foto reali** caricate dalle professioniste (storage) al posto delle iniziali.
+6. **PWA completa** (service worker, icone PNG 192/512) e URL condivisibili con filtri (`?citta=Milano&cat=home_sos`).
+7. **Flag SVG** al posto delle emoji (Windows non mostra le bandiere emoji).
