@@ -1,6 +1,7 @@
 import React from 'react';
 import { MapPin, ShieldCheck, Star, Phone, MessageCircle, Heart, Clock } from 'lucide-react';
 import { Avatar } from './ui';
+import Flag from './Flag';
 import { countryName, subcategoryName, pick } from '../lib/utils';
 
 export default function ListingCard({ pro, lang, t, isFav, onToggleFav, onOpen, onContact }) {
@@ -8,7 +9,7 @@ export default function ListingCard({ pro, lang, t, isFav, onToggleFav, onOpen, 
     <article className="bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-xl transition-all duration-200 flex flex-col overflow-hidden">
       <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 min-w-0">
-          <span className="shrink-0">{countryName(pro.country, lang)}</span>
+          <span className="shrink-0 inline-flex items-center gap-1.5"><Flag code={pro.country} />{countryName(pro.country, lang)}</span>
           <span className="text-slate-300">•</span>
           <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
           <span className="truncate">
@@ -52,7 +53,7 @@ export default function ListingCard({ pro, lang, t, isFav, onToggleFav, onOpen, 
                   <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                   {pro.rating.toFixed(1)}
                   <span className="text-slate-500 font-normal">
-                    ({pro.reviewsCount} {t.reviewsLabel})
+                    ({pro.reviewsCount} {pro.reviewsCount === 1 ? t.reviewsLabelOne : t.reviewsLabel})
                   </span>
                 </span>
               ) : (

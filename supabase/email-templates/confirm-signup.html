@@ -1,0 +1,41 @@
+<!--
+  Supabase → Authentication → Emails → "Confirm signup"
+  Oggetto consigliato: SOSPro24 — Benvenuta/o! Conferma la tua email
+  La lingua viene da user_metadata.lang (salvata dall'app alla registrazione); default italiano.
+-->
+{{ $l := or .Data.lang "it" }}{{ $name := or .Data.name "" }}
+<div style="font-family:Inter,Arial,sans-serif;background:#f1f5f9;padding:24px 12px;color:#0f172a">
+  <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0">
+    <div style="background:#0f172a;padding:20px 24px;color:#ffffff;font-size:22px;font-weight:800">
+      SOSPro<span style="color:#60a5fa">24</span>
+    </div>
+    <div style="padding:24px">
+{{ if eq $l "en" }}
+      <h1 style="font-size:20px;margin:0 0 12px">Welcome{{ if $name }}, {{ $name }}{{ end }}!</h1>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 20px">Thank you for joining SOSPro24, the directory of professionals by area — including emergencies. Confirm your email to activate your account.</p>
+      <p style="margin:0 0 24px"><a href="{{ .SiteURL }}/?token_hash={{ .TokenHash }}&amp;type=email" style="background:#2563eb;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:12px;display:inline-block">Confirm my email</a></p>
+      <p style="font-size:12px;color:#64748b;line-height:1.5;margin:0">If you did not create this account, simply ignore this email. SOSPro24 is a neutral intermediary platform and is not a rescue service: in a life-threatening emergency call 112 (UK: 999).</p>
+{{ else if eq $l "fr" }}
+      <h1 style="font-size:20px;margin:0 0 12px">Bienvenue{{ if $name }}, {{ $name }}{{ end }} !</h1>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 20px">Merci de rejoindre SOSPro24, l’annuaire des professionnelles par quartier, même en urgence. Confirmez votre e-mail pour activer votre compte.</p>
+      <p style="margin:0 0 24px"><a href="{{ .SiteURL }}/?token_hash={{ .TokenHash }}&amp;type=email" style="background:#2563eb;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:12px;display:inline-block">Confirmer mon e-mail</a></p>
+      <p style="font-size:12px;color:#64748b;line-height:1.5;margin:0">Si vous n’avez pas créé ce compte, ignorez simplement cet e-mail. SOSPro24 est une plateforme d’intermédiation neutre et n’est pas un service de secours : en cas d’urgence vitale, appelez le 112.</p>
+{{ else if eq $l "es" }}
+      <h1 style="font-size:20px;margin:0 0 12px">¡Bienvenida/o{{ if $name }}, {{ $name }}{{ end }}!</h1>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 20px">Gracias por unirte a SOSPro24, el directorio de profesionales por zona, también para urgencias. Confirma tu correo para activar la cuenta.</p>
+      <p style="margin:0 0 24px"><a href="{{ .SiteURL }}/?token_hash={{ .TokenHash }}&amp;type=email" style="background:#2563eb;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:12px;display:inline-block">Confirmar mi correo</a></p>
+      <p style="font-size:12px;color:#64748b;line-height:1.5;margin:0">Si no has creado esta cuenta, ignora este correo. SOSPro24 es una plataforma de intermediación neutral y no es un servicio de rescate: en caso de emergencia vital llama al 112.</p>
+{{ else if eq $l "de" }}
+      <h1 style="font-size:20px;margin:0 0 12px">Willkommen{{ if $name }}, {{ $name }}{{ end }}!</h1>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 20px">Danke, dass Sie SOSPro24 beigetreten sind – dem Verzeichnis für Fachkräfte in Ihrer Nähe, auch im Notfall. Bitte bestätigen Sie Ihre E-Mail, um das Konto zu aktivieren.</p>
+      <p style="margin:0 0 24px"><a href="{{ .SiteURL }}/?token_hash={{ .TokenHash }}&amp;type=email" style="background:#2563eb;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:12px;display:inline-block">E-Mail bestätigen</a></p>
+      <p style="font-size:12px;color:#64748b;line-height:1.5;margin:0">Wenn Sie dieses Konto nicht erstellt haben, ignorieren Sie diese E-Mail. SOSPro24 ist eine neutrale Vermittlungsplattform und kein Rettungsdienst: Bei Lebensgefahr rufen Sie die 112 an.</p>
+{{ else }}
+      <h1 style="font-size:20px;margin:0 0 12px">Benvenuta/o{{ if $name }}, {{ $name }}{{ end }}!</h1>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 20px">Grazie per esserti iscritta/o a SOSPro24, la bacheca delle professioniste per zona, anche in emergenza. Conferma la tua email per attivare l’account.</p>
+      <p style="margin:0 0 24px"><a href="{{ .SiteURL }}/?token_hash={{ .TokenHash }}&amp;type=email" style="background:#2563eb;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:12px;display:inline-block">Conferma la mia email</a></p>
+      <p style="font-size:12px;color:#64748b;line-height:1.5;margin:0">Se non hai creato tu questo account, ignora questa email. SOSPro24 è una piattaforma di intermediazione neutrale e non è un servizio di soccorso: in caso di emergenza vitale chiama il 112 (Regno Unito: 999).</p>
+{{ end }}
+    </div>
+  </div>
+</div>

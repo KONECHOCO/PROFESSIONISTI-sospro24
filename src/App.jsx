@@ -1,23 +1,24 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Search, ShieldCheck, Zap, PlusCircle, User, Globe, Filter, AlertTriangle, Wrench,
-  HeartHandshake, Sparkles, Laptop, X, FileText, ArrowUpDown, Info, Siren,
+  HeartHandshake, Sparkles, Laptop, X, FileText, ArrowUpDown, Info, Siren, LocateFixed,
 } from 'lucide-react';
+import Flag from './components/Flag';
 import { LANGUAGES, COUNTRIES, CATEGORIES, UI_TEXT } from './data';
 import { INITIAL_LISTINGS } from './data/mockListings';
 import ListingCard from './components/ListingCard';
 import ListingModal from './components/ListingModal';
-import { AuthModal, PublishModal, SmartMatchModal, ProfileModal, TermsModal } from './components/Modals';
+import EmptyState from './components/EmptyState';
+import { AuthModal, NewPasswordModal, PublishModal, SmartMatchModal, ProfileModal, TermsModal } from './components/Modals';
 import { Toast } from './components/ui';
 import {
   usePersistentState, loadJSON, normalizeListing, getCityOptions, getZoneOptions,
-  countryName, pick, categoryName, subcategoryName,
+  pick, categoryName, subcategoryName, detectCountry, nearestCity, getPosition,
 } from './lib/utils';
+import { supabase, isSupabaseConfigured, SHOW_DEMO } from './lib/supabase';
+import * as api from './lib/api';
 
 const CATEGORY_ICONS = { home_sos: Wrench, care_person: HeartHandshake, beauty_events: Sparkles, consulting_tech: Laptop };
-
-const newId = (prefix) =>
-  `${prefix}-${globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)}`;
 
 const stripAccents = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
@@ -28,28 +29,17 @@ function detectLanguage() {
   return LANGUAGES.some((l) => l.code === nav) ? nav : 'it';
 }
 
-// "Maria Rossi" -> "Maria R." (non mostriamo il cognome completo nelle recensioni pubbliche)
-const publicName = (full) => {
-  const parts = full.trim().split(/\s+/);
-  return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1][0].toUpperCase()}.` : parts[0];
-};
+// Chiavi del vecchio prototipo (tutto salvato nel browser): ora i dati stanno su Supabase
+const LEGACY_KEYS = ['sospro_listings_v1', 'sospro_ads_v2', 'sospro_reviews_v2', 'sospro_helpful_v2', 'sospro_reports_v2', 'sospro_user_v1'];
 
 export default function App() {
-  /* ------------------------------ Stato persistente ------------------------------ */
+  /* ------------------------------ Lingua e preferenze locali ------------------------------ */
   const [lang, setLang] = usePersistentState('sospro_lang', detectLanguage());
   const t = UI_TEXT[lang] || UI_TEXT.it;
-
-  // Gli annunci demo vivono nel codice; nel browser salviamo SOLO ciò che crea l'utente.
-  // Così ogni aggiornamento dei dati demo arriva subito, senza "dati vecchi" bloccati in localStorage.
-  const [ads, setAds] = usePersistentState('sospro_ads_v2', []);
-  const [extraReviews, setExtraReviews] = usePersistentState('sospro_reviews_v2', {});
-  const [helpfulClicked, setHelpfulClicked] = usePersistentState('sospro_helpful_v2', {});
   const [favorites, setFavorites] = usePersistentState('sospro_favs_v2', []);
-  const [reports, setReports] = usePersistentState('sospro_reports_v2', []);
-  const [currentUser, setCurrentUser] = usePersistentState('sospro_user_v1', null);
 
   useEffect(() => {
-    try { localStorage.removeItem('sospro_listings_v1'); } catch { /* ignore */ }
+    try { LEGACY_KEYS.forEach((k) => localStorage.removeItem(k)); } catch { /* ignore */ }
   }, []);
 
   useEffect(() => {
@@ -57,14 +47,110 @@ export default function App() {
     document.title = `SOSPro24 — ${t.brandSubtitle}`;
   }, [lang, t.brandSubtitle]);
 
+  /* ------------------------------ Toast ------------------------------ */
+  const [toast, setToast] = useState(null);
+  const showToast = useCallback((message, type = 'ok') => setToast({ message, type, id: Date.now() }), []);
+  const dismissToast = useCallback(() => setToast(null), []);
+
+  /* ------------------------------ Account (Supabase Auth) ------------------------------ */
+  const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [recovery, setRecovery] = useState(false);
+  // Esito del link arrivato via email: 'confirmed' | 'expired' | null
+  const [linkNotice, setLinkNotice] = useState(null);
+
+  useEffect(() => {
+    if (!supabase) return undefined;
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data } = supabase.auth.onAuthStateChange((event, s) => {
+      setSession(s);
+      if (event === 'PASSWORD_RECOVERY') setRecovery(true);
+    });
+
+    // Link delle email (modelli in supabase/email-templates): ?token_hash=...&type=email|recovery
+    // La verifica la fa l'app, così il link punta al nostro sito e non a supabase.co
+    const params = new URLSearchParams(window.location.search);
+    const tokenHash = params.get('token_hash');
+    const type = params.get('type');
+    const hashParams = new URLSearchParams(window.location.hash.slice(1));
+    const cleanUrl = () => window.history.replaceState(null, '', window.location.pathname);
+    if (tokenHash && type) {
+      cleanUrl();
+      supabase.auth.verifyOtp({ token_hash: tokenHash, type }).then(({ error }) => {
+        if (error) setLinkNotice('expired');
+        else if (type === 'recovery') setRecovery(true);
+        else setLinkNotice('confirmed');
+      });
+    } else if (hashParams.get('error_code')) {
+      // Vecchio formato del link (redirect di Supabase) scaduto o già usato
+      cleanUrl();
+      setLinkNotice('expired');
+    } else if (hashParams.get('type') === 'signup') {
+      setLinkNotice('confirmed');
+    }
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!linkNotice) return;
+    showToast(linkNotice === 'confirmed' ? t.emailConfirmed : t.linkExpired, linkNotice === 'confirmed' ? 'ok' : 'error');
+    setLinkNotice(null);
+  }, [linkNotice, showToast, t.emailConfirmed, t.linkExpired]);
+
+  const userId = session?.user?.id || null;
+
+  useEffect(() => {
+    if (!userId) return setProfile(null);
+    let alive = true;
+    api.fetchProfile(userId).then((p) => alive && setProfile(p)).catch(() => alive && setProfile(null));
+    return () => { alive = false; };
+  }, [userId]);
+
+  const currentUser = useMemo(() => {
+    if (!session?.user) return null;
+    const meta = session.user.user_metadata || {};
+    return {
+      id: session.user.id,
+      email: session.user.email,
+      name: profile?.name || meta.name || session.user.email.split('@')[0],
+      role: profile?.role || meta.role || 'client',
+      country: profile?.country || meta.country || '',
+      city: profile?.city || meta.city || '',
+    };
+  }, [session, profile]);
+
+  /* ------------------------------ Annunci dal database ------------------------------ */
+  const [dbListings, setDbListings] = useState([]);
+  const [loadState, setLoadState] = useState(isSupabaseConfigured ? 'loading' : 'error');
+
+  const reload = useCallback(async () => {
+    if (!supabase) return;
+    try {
+      setDbListings(await api.fetchListings());
+      setLoadState('ok');
+    } catch {
+      setLoadState('error');
+    }
+  }, []);
+
+  useEffect(() => { reload(); }, [reload]);
+
+  const [myVotes, setMyVotes] = useState(() => new Set());
+  useEffect(() => {
+    if (!userId) return setMyVotes(new Set());
+    api.fetchMyVotes().then(setMyVotes).catch(() => setMyVotes(new Set()));
+    return undefined;
+  }, [userId]);
+
   const listings = useMemo(
-    () => [...ads, ...INITIAL_LISTINGS].map((l) => normalizeListing(l, extraReviews[l.id] || [])),
-    [ads, extraReviews]
+    () => [...dbListings, ...(SHOW_DEMO ? INITIAL_LISTINGS : [])].map((l) => normalizeListing(l)),
+    [dbListings]
   );
 
   /* ------------------------------ Filtri ------------------------------ */
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCountry, setSelectedCountry] = useState('ALL');
+  // Paese preselezionato dalle impostazioni del dispositivo (fuso orario / lingua); 'ALL' se non supportato
+  const [selectedCountry, setSelectedCountry] = useState(detectCountry);
   const [selectedCity, setSelectedCity] = useState('ALL');
   const [selectedZone, setSelectedZone] = useState('ALL');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
@@ -130,23 +216,42 @@ export default function App() {
   const [showPublish, setShowPublish] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showSmartMatch, setShowSmartMatch] = useState(false);
-  const [toast, setToast] = useState(null);
-
-  const showToast = useCallback((message, type = 'ok') => setToast({ message, type, id: Date.now() }), []);
-  const dismissToast = useCallback(() => setToast(null), []);
 
   const activeListing = useMemo(() => listings.find((l) => l.id === activeListingId) || null, [listings, activeListingId]);
+
+  // "Vicino a me": chiede la posizione al browser (con permesso) e sceglie la città più vicina
+  // tra quelle dell'elenco. Il calcolo è locale: nessuna coordinata viene inviata a servizi esterni.
+  const [locating, setLocating] = useState(false);
+  const findNearMe = async () => {
+    setLocating(true);
+    try {
+      const pos = await getPosition();
+      const near = nearestCity(pos.lat, pos.lng);
+      if (!near) {
+        showToast(t.nearMeFar, 'error');
+      } else {
+        setSelectedCountry(near.country);
+        setSelectedCity(near.city);
+        setSelectedZone('ALL');
+      }
+    } catch {
+      showToast(t.nearMeError, 'error');
+    } finally {
+      setLocating(false);
+    }
+  };
 
   /* ------------------------------ Accesso ------------------------------ */
   const requireAuth = (callback) => {
     if (currentUser) return callback();
     setAuthNext(() => callback);
     setShowAuth(true);
+    return undefined;
   };
 
-  const completeLogin = (user) => {
-    setCurrentUser(user);
+  const handleSignedIn = () => {
     setShowAuth(false);
+    showToast(t.loggedIn);
     if (authNext) {
       const next = authNext;
       setAuthNext(null);
@@ -154,106 +259,94 @@ export default function App() {
     }
   };
 
-  const handleDemoLogin = (role) =>
-    completeLogin({
-      id: `user-demo-${role}`,
-      name: role === 'pro' ? 'Demo Pro' : 'Demo User',
-      email: `demo-${role}@sospro24.invalid`,
-      role,
-      country: 'IT',
-      city: '',
-      demo: true,
-      acceptedTermsAt: new Date().toISOString(),
-    });
+  const logout = async () => {
+    await api.signOut();
+    setShowProfile(false);
+  };
 
-  const handleRegister = (form) =>
-    completeLogin({
-      id: newId('user'),
-      name: form.name.trim(),
-      email: form.email.trim(),
-      role: form.role,
-      country: form.country,
-      city: form.city.trim(),
-      acceptedTermsAt: new Date().toISOString(),
-    });
+  const toggleRole = async () => {
+    if (!currentUser) return;
+    const role = currentUser.role === 'pro' ? 'client' : 'pro';
+    try {
+      await api.updateProfile(currentUser.id, { role });
+      setProfile((p) => ({ ...(p || {}), role }));
+    } catch {
+      showToast(t.actionError, 'error');
+    }
+  };
 
   /* ------------------------------ Azioni ------------------------------ */
   const toggleFavorite = (id) => setFavorites((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
-  const addReview = (listingId, { rating, tags, comment }) => {
+  const addReview = async (listingId, { rating, tags, comment }) => {
     const target = listings.find((l) => l.id === listingId);
     if (!currentUser || !target) return { ok: false };
+    if (target.demo) { showToast(t.demoReviewDisabled, 'error'); return { ok: false }; }
     if (target.ownerId === currentUser.id) { showToast(t.reviewOwnAd, 'error'); return { ok: false }; }
     if (target.reviews.some((r) => r.userId === currentUser.id)) { showToast(t.reviewAlready, 'error'); return { ok: false }; }
-    if (!comment.trim()) { showToast(t.reviewNeedComment, 'error'); return { ok: false }; }
-
-    const review = {
-      id: newId('rev'),
-      userId: currentUser.id,
-      author: publicName(currentUser.name),
-      role: currentUser.role,
-      createdAt: new Date().toISOString(),
-      rating,
-      tags,
-      comment: comment.trim(),
-      helpful: 0,
-    };
-    setExtraReviews((prev) => ({ ...prev, [listingId]: [review, ...(prev[listingId] || [])] }));
-    showToast(t.reviewPublished);
-    return { ok: true };
+    if (comment.trim().length < 3) { showToast(t.reviewNeedComment, 'error'); return { ok: false }; }
+    try {
+      await api.addReview(listingId, { rating, tags, comment });
+      await reload();
+      showToast(t.reviewPublished);
+      return { ok: true };
+    } catch (err) {
+      showToast(err?.code === '23505' ? t.reviewAlready : t.actionError, 'error');
+      return { ok: false };
+    }
   };
 
-  const markHelpful = (listingId, reviewId) => setHelpfulClicked((prev) => ({ ...prev, [`${listingId}_${reviewId}`]: true }));
-
-  const report = (payload) => {
-    setReports((prev) => [...prev, { id: newId('rep'), userId: currentUser?.id || null, createdAt: new Date().toISOString(), ...payload }]);
-    showToast(t.reportSent);
+  const markHelpful = async (listingId, reviewId) => {
+    const target = listings.find((l) => l.id === listingId);
+    if (target?.demo) return showToast(t.demoReviewDisabled, 'error');
+    if (!currentUser) { showToast(t.loginToVote); return setShowAuth(true); }
+    if (myVotes.has(reviewId)) return undefined;
+    try {
+      await api.voteHelpful(reviewId);
+      setMyVotes((prev) => new Set(prev).add(reviewId));
+      await reload();
+    } catch {
+      showToast(t.actionError, 'error');
+    }
+    return undefined;
   };
 
-  const publishAd = (form) => {
-    const split = (s) => s.split(',').map((x) => x.trim()).filter(Boolean);
-    const title = form.title.trim();
-    const description = form.description.trim();
-    const listing = {
-      id: newId('ad'),
-      ownerId: currentUser.id,
-      demo: false,
-      verified: false, // la verifica d'identità dev'essere un processo reale, mai automatico
-      createdAt: new Date().toISOString(),
-      name: form.name.trim(),
-      country: form.country,
-      city: form.city,
-      zone: form.zone,
-      categoryId: form.categoryId,
-      subcategoryId: form.subcategoryId,
-      sosAvailable: form.sosAvailable,
-      responseTimeMin: null, // dato sconosciuto finché non esistono statistiche reali
-      hourlyRate: Math.max(1, Number(form.hourlyRate) || 1),
-      callOutFee: Math.max(0, Number(form.callOutFee) || 0),
-      currency: form.currency,
-      experienceYears: null,
-      languages: split(form.languages),
-      phone: form.phone.trim(),
-      titles: Object.fromEntries(LANGUAGES.map((l) => [l.code, title])),
-      descriptions: Object.fromEntries(LANGUAGES.map((l) => [l.code, description])),
-      skills: split(form.skills),
-      reviews: [],
-    };
-    setAds((prev) => [listing, ...prev]);
-    setShowPublish(false);
-    resetAllFilters();
-    setSelectedCountry(form.country);
-    setActiveListingId(listing.id);
-    showToast(t.adPublished);
+  const report = async ({ listingId = null, reviewId = null }) => {
+    const target = listings.find((l) => l.id === listingId);
+    try {
+      if (!target?.demo) await api.report({ listingId, reviewId });
+      showToast(t.reportSent);
+    } catch {
+      showToast(t.actionError, 'error');
+    }
   };
 
-  const deleteAd = (id) => {
+  const publishAd = async (form) => {
+    try {
+      const id = await api.createListing(form);
+      await reload();
+      setShowPublish(false);
+      resetAllFilters();
+      setSelectedCountry(form.country);
+      setActiveListingId(id);
+      showToast(t.adPublished);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const deleteAd = async (id) => {
     if (!window.confirm(t.deleteAdConfirm)) return;
-    setAds((prev) => prev.filter((a) => a.id !== id));
-    setExtraReviews((prev) => { const { [id]: _removed, ...rest } = prev; return rest; });
-    setFavorites((prev) => prev.filter((x) => x !== id));
-    if (activeListingId === id) setActiveListingId(null);
-    showToast(t.adDeleted);
+    try {
+      await api.deleteListing(id);
+      setFavorites((prev) => prev.filter((x) => x !== id));
+      if (activeListingId === id) setActiveListingId(null);
+      await reload();
+      showToast(t.adDeleted);
+    } catch {
+      showToast(t.actionError, 'error');
+    }
   };
 
   const openPublish = () => requireAuth(() => { setShowProfile(false); setShowPublish(true); });
@@ -295,7 +388,7 @@ export default function App() {
                 title={l.label}
                 className={`px-2 py-0.5 rounded font-medium transition ${lang === l.code ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
               >
-                {l.flag} {l.code.toUpperCase()}
+                {l.code.toUpperCase()}
               </button>
             ))}
           </div>
@@ -398,7 +491,7 @@ export default function App() {
               <div className="md:col-span-2">
                 <label className={mainFilterLabel} htmlFor="f-country">{t.countryLabel}</label>
                 <select id="f-country" value={selectedCountry} onChange={(e) => { setSelectedCountry(e.target.value); setSelectedCity('ALL'); setSelectedZone('ALL'); }} className={selectCls}>
-                  {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.flag} {pick(c.names, lang)}</option>)}
+                  {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{pick(c.names, lang)}</option>)}
                 </select>
               </div>
 
@@ -477,7 +570,7 @@ export default function App() {
               <Filter className="w-5 h-5 shrink-0" />
               <div>
                 <div className="text-xs font-bold leading-tight">{t.allCategories}</div>
-                <div className="text-[10px] opacity-80">{listings.length} {t.adsCount}</div>
+                <div className="text-[10px] opacity-80">{listings.length} {listings.length === 1 ? t.adsCountOne : t.adsCount}</div>
               </div>
             </button>
             {CATEGORIES.map((cat) => {
@@ -495,7 +588,7 @@ export default function App() {
                   <Icon className="w-5 h-5 shrink-0 text-blue-300" />
                   <div className="min-w-0">
                     <div className="text-xs font-bold leading-tight">{pick(cat.names, lang)}</div>
-                    <div className="text-[10px] opacity-80">{count} {t.prosCount}</div>
+                    <div className="text-[10px] opacity-80">{count} {count === 1 ? t.prosCountOne : t.prosCount}</div>
                   </div>
                 </button>
               );
@@ -506,7 +599,11 @@ export default function App() {
 
       {/* Contenuto */}
       <main className="max-w-7xl mx-auto w-full px-4 py-8 flex-1">
-        {INITIAL_LISTINGS.length > 0 && (
+        {!isSupabaseConfigured && (
+          <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-sm font-semibold">{t.configMissing}</div>
+        )}
+
+        {SHOW_DEMO && (
           <div className="mb-6 p-4 rounded-2xl bg-blue-50 border border-blue-200 flex items-start gap-3 text-blue-950">
             <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
             <div className="text-xs sm:text-sm">
@@ -518,33 +615,66 @@ export default function App() {
 
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-lg font-extrabold text-slate-900" aria-live="polite">{filteredListings.length} {t.resultsCount}</h2>
+            <h2 className="text-lg font-extrabold text-slate-900" aria-live="polite">
+              {loadState === 'loading' ? t.loading : `${filteredListings.length} ${filteredListings.length === 1 ? t.resultsCountOne : t.resultsCount}`}
+            </h2>
             {hasFilters && (
               <button type="button" onClick={resetAllFilters} className="text-xs font-semibold text-blue-600 hover:text-blue-800 underline ml-2">{t.resetFilters}</button>
             )}
           </div>
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
-            {COUNTRIES.map((c) => (
-              <button
-                key={c.code}
-                type="button"
-                aria-pressed={selectedCountry === c.code}
-                onClick={() => { setSelectedCountry(c.code); setSelectedCity('ALL'); setSelectedZone('ALL'); }}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition shrink-0 ${selectedCountry === c.code ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'}`}
-              >
-                {c.flag} {pick(c.names, lang)}
-              </button>
-            ))}
+          <div className="flex items-center gap-2 max-w-full">
+            <button
+              type="button"
+              onClick={findNearMe}
+              disabled={locating}
+              title={t.nearMeNote}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-60 shrink-0 transition"
+            >
+              <LocateFixed className={`w-3.5 h-3.5 ${locating ? 'animate-pulse' : ''}`} />
+              {t.nearMe}
+            </button>
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+              {COUNTRIES.map((c) => (
+                <button
+                  key={c.code}
+                  type="button"
+                  aria-pressed={selectedCountry === c.code}
+                  onClick={() => { setSelectedCountry(c.code); setSelectedCity('ALL'); setSelectedZone('ALL'); }}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition shrink-0 ${selectedCountry === c.code ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'}`}
+                >
+                  <Flag code={c.code} />
+                  {pick(c.names, lang)}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {filteredListings.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center max-w-xl mx-auto my-6 shadow-sm">
-            <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-3" />
-            <h3 className="text-lg font-bold text-slate-900 mb-1">{t.noResultsTitle}</h3>
-            <p className="text-sm text-slate-500 mb-5">{t.noResultsDesc}</p>
-            <button type="button" onClick={resetAllFilters} className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition">{t.resetFilters}</button>
+        {loadState === 'error' && isSupabaseConfigured && (
+          <div className="bg-white rounded-2xl border border-rose-200 p-8 text-center max-w-xl mx-auto my-6 shadow-sm">
+            <AlertTriangle className="w-10 h-10 text-rose-500 mx-auto mb-3" />
+            <p className="text-sm text-slate-700 mb-4">{t.loadError}</p>
+            <button type="button" onClick={() => { setLoadState('loading'); reload(); }} className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm">{t.retry}</button>
           </div>
+        )}
+
+        {loadState === 'loading' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-hidden="true">
+            {[0, 1, 2].map((i) => <div key={i} className="h-80 rounded-2xl bg-slate-200/70 animate-pulse" />)}
+          </div>
+        )}
+
+        {loadState === 'ok' && (filteredListings.length === 0 ? (
+          <EmptyState
+            t={t}
+            lang={lang}
+            country={selectedCountry}
+            city={selectedCity}
+            categoryId={selectedCategory}
+            hasFilters={hasFilters}
+            onReset={resetAllFilters}
+            onPublish={openPublish}
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredListings.map((pro) => (
@@ -560,7 +690,7 @@ export default function App() {
               />
             ))}
           </div>
-        )}
+        ))}
 
         <section className="mt-12 bg-amber-50/90 border border-amber-200 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-start gap-3.5">
@@ -605,19 +735,35 @@ export default function App() {
           lang={lang}
           t={t}
           currentUser={currentUser}
-          helpfulClicked={helpfulClicked}
+          myVotes={myVotes}
+          loadContact={api.fetchContact}
           onClose={() => setActiveListingId(null)}
           onLogin={() => setShowAuth(true)}
           onAddReview={addReview}
           onHelpful={markHelpful}
-          onReportReview={(listingId, reviewId) => report({ type: 'review', listingId, reviewId })}
-          onReportAd={(listingId) => report({ type: 'ad', listingId })}
+          onReportReview={(listingId, reviewId) => report({ listingId, reviewId })}
+          onReportAd={(listingId) => report({ listingId })}
           onToast={showToast}
         />
       )}
 
       {showAuth && (
-        <AuthModal lang={lang} t={t} onClose={() => { setShowAuth(false); setAuthNext(null); }} onDemoLogin={handleDemoLogin} onRegister={handleRegister} onShowTerms={() => setShowTerms(true)} />
+        <AuthModal
+          lang={lang}
+          t={t}
+          defaultCountry={selectedCountry}
+          onClose={() => { setShowAuth(false); setAuthNext(null); }}
+          onShowTerms={() => setShowTerms(true)}
+          onSignedIn={handleSignedIn}
+        />
+      )}
+
+      {recovery && (
+        <NewPasswordModal
+          t={t}
+          onClose={() => setRecovery(false)}
+          onDone={() => { setRecovery(false); showToast(t.passwordUpdated); }}
+        />
       )}
 
       {showPublish && currentUser && (
@@ -652,8 +798,8 @@ export default function App() {
           onClose={() => setShowProfile(false)}
           onOpen={openListing}
           onPublish={openPublish}
-          onToggleRole={() => setCurrentUser({ ...currentUser, role: currentUser.role === 'pro' ? 'client' : 'pro' })}
-          onLogout={() => { setCurrentUser(null); setShowProfile(false); }}
+          onToggleRole={toggleRole}
+          onLogout={logout}
           onDeleteAd={deleteAd}
         />
       )}

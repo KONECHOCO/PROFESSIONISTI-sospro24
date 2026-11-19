@@ -25,12 +25,13 @@ export const COUNTRIES = [
     currency: '€',
     names: { it: 'Italia', en: 'Italy', fr: 'Italie', es: 'Italia', de: 'Italien' },
     cities: [
-      { id: 'Milano', zones: ['Centro Storico', 'Navigli / Porta Genova', 'Isola / Garibaldi', 'Città Studi / Loreto', 'San Siro / Fiera'] },
-      { id: 'Roma', zones: ['Centro / Prati', 'Trastevere / Monteverde', 'EUR / Ostiense', 'Parioli / Flaminio', 'San Giovanni / Appio'] },
-      { id: 'Torino', zones: ['Centro / Crocetta', 'San Salvario', 'Cit Turin / Francia', 'Lingotto / Mirafiori'] },
-      { id: 'Napoli', zones: ['Vomero / Arenella', 'Chiaia / Posillipo', 'Centro Storico', 'Fuorigrotta'] },
-      { id: 'Bologna', zones: ['Centro Storico', 'Bolognina', 'Saragozza / Costa', 'Murri / Mazzini'] },
-      { id: 'Firenze', zones: ['Centro / Duomo', 'Oltrarno', 'Campo di Marte', 'Novoli / Rifredi'] }
+      { id: 'Milano', lat: 45.464, lng: 9.19, zones: ['Centro Storico', 'Navigli / Porta Genova', 'Isola / Garibaldi', 'Città Studi / Loreto', 'San Siro / Fiera'] },
+      { id: 'Roma', lat: 41.903, lng: 12.496, zones: ['Centro / Prati', 'Trastevere / Monteverde', 'EUR / Ostiense', 'Parioli / Flaminio', 'San Giovanni / Appio'] },
+      { id: 'Torino', lat: 45.07, lng: 7.687, zones: ['Centro / Crocetta', 'San Salvario', 'Cit Turin / Francia', 'Lingotto / Mirafiori'] },
+      { id: 'Napoli', lat: 40.852, lng: 14.268, zones: ['Vomero / Arenella', 'Chiaia / Posillipo', 'Centro Storico', 'Fuorigrotta'] },
+      { id: 'Bologna', lat: 44.494, lng: 11.343, zones: ['Centro Storico', 'Bolognina', 'Saragozza / Costa', 'Murri / Mazzini'] },
+      { id: 'Firenze', lat: 43.77, lng: 11.255, zones: ['Centro / Duomo', 'Oltrarno', 'Campo di Marte', 'Novoli / Rifredi'] },
+      { id: 'Piacenza', lat: 45.052, lng: 9.693, zones: ['Centro Storico', 'Farnesiana / Besurica', 'Barriera Genova / Infrangibile', 'Provincia di Piacenza', 'Online e a domicilio'] }
     ]
   },
   {
@@ -39,10 +40,10 @@ export const COUNTRIES = [
     currency: '€',
     names: { it: 'Francia', en: 'France', fr: 'France', es: 'Francia', de: 'Frankreich' },
     cities: [
-      { id: 'Paris', zones: ['Le Marais / Centre (1er-4e)', 'Rive Gauche (5e-7e)', 'Montmartre / Opéra (9e-18e)', 'Bastille / Nation (11e-12e)', 'Passy / Auteuil (16e)'] },
-      { id: 'Lyon', zones: ['Presqu’île', 'Part-Dieu / Brotteaux', 'Vieux Lyon', 'Confluence'] },
-      { id: 'Marseille', zones: ['Vieux-Port', 'Prado / Périer', 'Castellane', 'Euroméditerranée'] },
-      { id: 'Nice', zones: ['Vieux-Nice', 'Carré d’Or / Promenade', 'Cimiez', 'Libération'] }
+      { id: 'Paris', lat: 48.857, lng: 2.352, zones: ['Le Marais / Centre (1er-4e)', 'Rive Gauche (5e-7e)', 'Montmartre / Opéra (9e-18e)', 'Bastille / Nation (11e-12e)', 'Passy / Auteuil (16e)'] },
+      { id: 'Lyon', lat: 45.764, lng: 4.836, zones: ['Presqu’île', 'Part-Dieu / Brotteaux', 'Vieux Lyon', 'Confluence'] },
+      { id: 'Marseille', lat: 43.296, lng: 5.37, zones: ['Vieux-Port', 'Prado / Périer', 'Castellane', 'Euroméditerranée'] },
+      { id: 'Nice', lat: 43.71, lng: 7.262, zones: ['Vieux-Nice', 'Carré d’Or / Promenade', 'Cimiez', 'Libération'] }
     ]
   },
   {
@@ -51,9 +52,9 @@ export const COUNTRIES = [
     currency: '€',
     names: { it: 'Spagna', en: 'Spain', fr: 'Espagne', es: 'España', de: 'Spanien' },
     cities: [
-      { id: 'Madrid', zones: ['Centro / Sol', 'Salamanca / Retiro', 'Chamberí', 'Chamartín'] },
-      { id: 'Barcelona', zones: ['Eixample', 'Ciutat Vella / Born', 'Gràcia', 'Diagonal / Les Corts'] },
-      { id: 'Valencia', zones: ['Ciutat Vella', 'Ruzafa / Eixample', 'El Carmen', 'Ciudad de las Artes'] }
+      { id: 'Madrid', lat: 40.417, lng: -3.704, zones: ['Centro / Sol', 'Salamanca / Retiro', 'Chamberí', 'Chamartín'] },
+      { id: 'Barcelona', lat: 41.385, lng: 2.173, zones: ['Eixample', 'Ciutat Vella / Born', 'Gràcia', 'Diagonal / Les Corts'] },
+      { id: 'Valencia', lat: 39.47, lng: -0.376, zones: ['Ciutat Vella', 'Ruzafa / Eixample', 'El Carmen', 'Ciudad de las Artes'] }
     ]
   },
   {
@@ -62,8 +63,8 @@ export const COUNTRIES = [
     currency: '£',
     names: { it: 'Regno Unito', en: 'United Kingdom', fr: 'Royaume-Uni', es: 'Reino Unido', de: 'Vereinigtes Königreich' },
     cities: [
-      { id: 'London', zones: ['Central / Westminster', 'Kensington & Chelsea', 'Camden / Islington', 'Canary Wharf / East', 'South Bank / Greenwich'] },
-      { id: 'Manchester', zones: ['City Centre / Deansgate', 'Northern Quarter', 'Salford Quays', 'Didsbury'] }
+      { id: 'London', lat: 51.507, lng: -0.128, zones: ['Central / Westminster', 'Kensington & Chelsea', 'Camden / Islington', 'Canary Wharf / East', 'South Bank / Greenwich'] },
+      { id: 'Manchester', lat: 53.481, lng: -2.243, zones: ['City Centre / Deansgate', 'Northern Quarter', 'Salford Quays', 'Didsbury'] }
     ]
   },
   {
@@ -72,8 +73,8 @@ export const COUNTRIES = [
     currency: '€',
     names: { it: 'Germania', en: 'Germany', fr: 'Allemagne', es: 'Alemania', de: 'Deutschland' },
     cities: [
-      { id: 'Berlin', zones: ['Mitte', 'Charlottenburg', 'Kreuzberg / Friedrichshain', 'Prenzlauer Berg'] },
-      { id: 'München', zones: ['Altstadt / Lehel', 'Maxvorstadt', 'Schwabing', 'Bogenhausen'] }
+      { id: 'Berlin', lat: 52.52, lng: 13.405, zones: ['Mitte', 'Charlottenburg', 'Kreuzberg / Friedrichshain', 'Prenzlauer Berg'] },
+      { id: 'München', lat: 48.137, lng: 11.576, zones: ['Altstadt / Lehel', 'Maxvorstadt', 'Schwabing', 'Bogenhausen'] }
     ]
   },
   {
@@ -82,9 +83,9 @@ export const COUNTRIES = [
     currency: 'CHF',
     names: { it: 'Svizzera', en: 'Switzerland', fr: 'Suisse', es: 'Suiza', de: 'Schweiz' },
     cities: [
-      { id: 'Lugano', zones: ['Centro / Lungolago', 'Paradiso', 'Besso / Stazione', 'Viganello / Molino Nuovo'] },
-      { id: 'Zürich', zones: ['Altstadt (Kreis 1)', 'Seefeld', 'Zürich-West', 'Oerlikon'] },
-      { id: 'Genève', zones: ['Centre / Eaux-Vives', 'Plainpalais', 'Carouge', 'Pâquis / Nations'] }
+      { id: 'Lugano', lat: 46.01, lng: 8.96, zones: ['Centro / Lungolago', 'Paradiso', 'Besso / Stazione', 'Viganello / Molino Nuovo'] },
+      { id: 'Zürich', lat: 47.377, lng: 8.541, zones: ['Altstadt (Kreis 1)', 'Seefeld', 'Zürich-West', 'Oerlikon'] },
+      { id: 'Genève', lat: 46.204, lng: 6.143, zones: ['Centre / Eaux-Vives', 'Plainpalais', 'Carouge', 'Pâquis / Nations'] }
     ]
   }
 ];
@@ -160,6 +161,7 @@ export const CATEGORIES = [
     },
     subcategories: [
       { id: 'it_repair', names: { it: 'SOS Tecnico PC, Reti & Smartphone', en: 'SOS PC, Network & Phone Repair', fr: 'Dépannage Informatique & Mobile', es: 'Técnico PC, Redes y Móvil', de: 'PC-, Netzwerk- & Smartphone-Hilfe' } },
+      { id: 'web_software', names: { it: 'Siti Web, App & Gestionali', en: 'Websites, Apps & Business Software', fr: 'Sites Web, Applis & Logiciels de Gestion', es: 'Webs, Apps y Software de Gestión', de: 'Websites, Apps & Unternehmenssoftware' } },
       { id: 'translator', names: { it: 'Traduttrice & Interprete Giurata', en: 'Translator & Interpreter', fr: 'Traductrice & Interprète', es: 'Traductora e Intérprete', de: 'Übersetzerin & Dolmetscherin' } },
       { id: 'tutor', names: { it: 'Ripetizioni & Lezioni di Lingue', en: 'Private Tutor & Language Lessons', fr: 'Cours Particuliers & Langues', es: 'Clases Particulares e Idiomas', de: 'Nachhilfe & Sprachunterricht' } },
       { id: 'legal_tax', names: { it: 'Consulente Fiscale, Pratiche & CAF', en: 'Tax, Admin & Legal Advisor', fr: 'Conseiller Fiscal & Administratif', es: 'Asesoría Fiscal y Trámites', de: 'Steuer- & Behördenberatung' } },
@@ -203,6 +205,7 @@ export const UI_TEXT = {
     loginRegisterBtn: 'Accedi / Registrati',
     myProfileBtn: 'Il Mio Profilo',
     resultsCount: 'professionisti trovati',
+    resultsCountOne: 'professionista trovato',
     resetFilters: 'Azzera filtri',
     availableNowBadge: 'SOS DISPONIBILE ORA',
     verifiedBadge: 'Verificata',
@@ -278,6 +281,7 @@ export const UI_TEXT = {
     loginRegisterBtn: 'Sign In / Register',
     myProfileBtn: 'My Profile',
     resultsCount: 'professionals found',
+    resultsCountOne: 'professional found',
     resetFilters: 'Reset filters',
     availableNowBadge: 'SOS AVAILABLE NOW',
     verifiedBadge: 'Verified',
@@ -353,6 +357,7 @@ export const UI_TEXT = {
     loginRegisterBtn: 'Connexion / Inscription',
     myProfileBtn: 'Mon Profil',
     resultsCount: 'professionnels trouvés',
+    resultsCountOne: 'professionnel trouvé',
     resetFilters: 'Réinitialiser',
     availableNowBadge: 'SOS DISPO MAINTENANT',
     verifiedBadge: 'Vérifiée',
@@ -428,6 +433,7 @@ export const UI_TEXT = {
     loginRegisterBtn: 'Entrar / Registrarse',
     myProfileBtn: 'Mi Perfil',
     resultsCount: 'profesionales encontrados',
+    resultsCountOne: 'profesional encontrado',
     resetFilters: 'Limpiar filtros',
     availableNowBadge: 'SOS DISPONIBLE AHORA',
     verifiedBadge: 'Verificada',
@@ -503,6 +509,7 @@ export const UI_TEXT = {
     loginRegisterBtn: 'Anmelden / Registrieren',
     myProfileBtn: 'Mein Profil',
     resultsCount: 'Fachkräfte gefunden',
+    resultsCountOne: 'Fachkraft gefunden',
     resetFilters: 'Filter zurücksetzen',
     availableNowBadge: 'SOS JETZT VERFÜGBAR',
     verifiedBadge: 'Verifiziert',

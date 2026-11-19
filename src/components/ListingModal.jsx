@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ShieldCheck, Star, Phone, MessageCircle, AlertTriangle, ThumbsUp, Flag, Send, Info } from 'lucide-react';
 import { Avatar, Modal, ModalHeader, Stars } from './ui';
 import { FEEDBACK_TAGS } from '../data';
@@ -7,13 +7,26 @@ import {
 } from '../lib/utils';
 
 export default function ListingModal({
-  listing, lang, t, currentUser, helpfulClicked,
+  listing, lang, t, currentUser, myVotes, loadContact,
   onClose, onLogin, onAddReview, onHelpful, onReportReview, onReportAd, onToast,
 }) {
   const [rating, setRating] = useState(5);
   const [tags, setTags] = useState([]);
   const [comment, setComment] = useState('');
   const [message, setMessage] = useState('');
+  const [sending, setSending] = useState(false);
+  // Telefono: per gli annunci reali viene letto dal database SOLO se l'utente è registrato
+  const [phone, setPhone] = useState(listing.demo ? listing.phone : undefined);
+
+  useEffect(() => {
+    if (listing.demo || !currentUser) return undefined;
+    let alive = true;
+    setPhone(undefined);
+    loadContact(listing.id)
+      .then((p) => alive && setPhone(p))
+      .catch(() => alive && setPhone(null));
+    return () => { alive = false; };
+  }, [listing.id, listing.demo, currentUser, loadContact]);
 
   const tagLabels = FEEDBACK_TAGS[lang] || FEEDBACK_TAGS.it;
   const isOwner = !!currentUser && listing.ownerId === currentUser.id;
@@ -21,10 +34,13 @@ export default function ListingModal({
 
   const demoNotice = () => onToast(t.demoContactNotice, 'error');
 
-  const submitReview = (e) => {
+  const submitReview = async (e) => {
     e.preventDefault();
     if (!currentUser) return onLogin();
-    const res = onAddReview(listing.id, { rating, tags, comment });
+    if (sending) return;
+    setSending(true);
+    const res = await onAddReview(listing.id, { rating, tags, comment });
+    setSending(false);
     if (res.ok) {
       setComment('');
       setTags([]);
@@ -35,7 +51,8 @@ export default function ListingModal({
   const sendMessage = () => {
     if (!message.trim()) return;
     if (listing.demo) return demoNotice();
-    window.open(whatsappHref(listing.phone, message.trim()), '_blank', 'noopener,noreferrer');
+    if (!phone) return;
+    window.open(whatsappHref(phone, message.trim()), '_blank', 'noopener,noreferrer');
     setMessage('');
   };
 
@@ -88,7 +105,7 @@ export default function ListingModal({
             <div className="mt-4 flex flex-wrap gap-2.5 text-xs">
               <div className="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 font-bold text-amber-900 flex items-center gap-1.5">
                 <Star className="w-4 h-4 fill-amber-400 text-amber-500" />
-                {listing.rating !== null ? `${listing.rating.toFixed(1)} (${listing.reviewsCount} ${t.reviewsLabel})` : t.noReviewsYet}
+                {listing.rating !== null ? `${listing.rating.toFixed(1)} (${listing.reviewsCount} ${listing.reviewsCount === 1 ? t.reviewsLabelOne : t.reviewsLabel})` : t.noReviewsYet}
               </div>
               <div className="px-3 py-1.5 rounded-xl bg-slate-100 font-semibold text-slate-700">
                 {t.fromPrice} <span className="font-extrabold text-slate-900">{listing.currency}{listing.hourlyRate}{t.perHour}</span>
@@ -113,10 +130,12 @@ export default function ListingModal({
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <div className="text-xs uppercase tracking-wider text-blue-400 font-bold">{t.directContact}</div>
-                  <div className="text-lg font-extrabold mt-0.5">📞 {listing.phone}</div>
+                  <div className="text-lg font-extrabold mt-0.5">
+                    📞 {phone === undefined ? t.contactLoading : phone || '—'}
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {listing.demo ? (
+                  {!listing.demo && !phone ? null : listing.demo ? (
                     <>
                       <button type="button" onClick={demoNotice} className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5">
                         <Phone className="w-4 h-4" /> {t.callBtn}
@@ -127,10 +146,10 @@ export default function ListingModal({
                     </>
                   ) : (
                     <>
-                      <a href={telHref(listing.phone)} className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5">
+                      <a href={telHref(phone)} className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5">
                         <Phone className="w-4 h-4" /> {t.callBtn}
                       </a>
-                      <a href={whatsappHref(listing.phone)} target="_blank" rel="noopener noreferrer" className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5">
+                      <a href={whatsappHref(phone)} target="_blank" rel="noopener noreferrer" className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5">
                         <MessageCircle className="w-4 h-4" /> {t.whatsappBtn}
                       </a>
                     </>
@@ -194,7 +213,9 @@ export default function ListingModal({
             {t.leaveFeedbackTitle}
           </h3>
 
-          {isOwner ? (
+          {listing.demo ? (
+            <p className="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-xl p-3 mb-6">{t.demoReviewDisabled}</p>
+          ) : isOwner ? (
             <p className="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-xl p-3 mb-6">{t.reviewOwnAd}</p>
           ) : alreadyReviewed ? (
             <p className="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-xl p-3 mb-6">{t.reviewAlready}</p>
@@ -254,7 +275,7 @@ export default function ListingModal({
                 className="w-full p-3 rounded-xl bg-white border border-slate-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <div className="flex justify-end">
-                <button type="submit" className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition">
+                <button type="submit" disabled={sending} className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold text-xs transition">
                   {t.submitReviewBtn}
                 </button>
               </div>
@@ -269,8 +290,7 @@ export default function ListingModal({
           ) : (
             <div className="space-y-3">
               {listing.reviews.map((rev) => {
-                const key = `${listing.id}_${rev.id}`;
-                const voted = !!helpfulClicked[key];
+                const voted = myVotes.has(rev.id);
                 return (
                   <div key={rev.id} className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
                     <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
@@ -309,7 +329,7 @@ export default function ListingModal({
                         }`}
                       >
                         <ThumbsUp className="w-3 h-3" />
-                        {t.helpfulBtn} ({(rev.helpful || 0) + (voted ? 1 : 0)})
+                        {t.helpfulBtn} ({rev.helpful || 0})
                       </button>
                       <button
                         type="button"

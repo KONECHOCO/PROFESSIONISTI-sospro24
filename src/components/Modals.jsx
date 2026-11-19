@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { ShieldCheck, LogOut, Trash2, Info } from 'lucide-react';
+import { ShieldCheck, LogOut, Trash2 } from 'lucide-react';
 import { Avatar, Modal, ModalHeader } from './ui';
 import { COUNTRIES, CATEGORIES, LEGAL_SECTIONS } from '../data';
 import { pick, isValidPhone, currencyOf, countryName } from '../lib/utils';
+import { signIn, signUp, sendPasswordReset, updatePassword, authErrorKey } from '../lib/api';
 
 const inputCls = 'w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 const labelCls = 'block text-xs font-bold text-slate-700 mb-1';
@@ -39,88 +40,222 @@ export function TermsModal({ lang, t, onClose }) {
 }
 
 /* ============================ ACCESSO / REGISTRAZIONE ============================ */
-export function AuthModal({ lang, t, onClose, onDemoLogin, onRegister, onShowTerms }) {
-  const [form, setForm] = useState({ name: '', email: '', role: 'client', country: 'IT', city: '', acceptedTerms: false });
+// mode: 'login' | 'signup' | 'forgot'
+export function AuthModal({ lang, t, defaultCountry, onClose, onShowTerms, onSignedIn }) {
+  const [mode, setMode] = useState('login');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'client',
+    country: defaultCountry && defaultCountry !== 'ALL' ? defaultCountry : 'IT',
+    city: '',
+    acceptedTerms: false,
+  });
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
+  const switchMode = (m) => { setMode(m); setError(''); setInfo(''); };
+
+  const run = async (fn) => {
+    setBusy(true);
+    setError('');
+    setInfo('');
+    try {
+      await fn();
+    } catch (err) {
+      setError(t[authErrorKey(err)] || t.authErrorGeneric);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const submit = (e) => {
     e.preventDefault();
-    if (!form.acceptedTerms || !form.name.trim() || !form.email.trim()) return;
-    onRegister(form);
+    if (busy) return;
+
+    if (mode === 'forgot') {
+      return run(async () => {
+        await sendPasswordReset(form.email);
+        setInfo(t.resetSent);
+      });
+    }
+
+    if (mode === 'login') {
+      return run(async () => {
+        await signIn(form);
+        onSignedIn();
+      });
+    }
+
+    // Registrazione
+    if (!form.acceptedTerms || !form.name.trim()) return undefined;
+    if (form.password.length < 8) return setError(t.authErrorWeak);
+    return run(async () => {
+      const data = await signUp({ ...form, lang });
+      // Con la conferma email attiva, un'email già registrata torna senza "identities"
+      if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        setError(t.authErrorExists);
+        return;
+      }
+      if (data.session) onSignedIn();
+      else setInfo(t.checkEmail);
+    });
   };
 
+  const title = mode === 'signup' ? t.signupTab : mode === 'forgot' ? t.forgotPassword : t.loginTab;
+  const submitLabel = mode === 'signup' ? t.registerSubmit : mode === 'forgot' ? t.sendResetLink : t.loginSubmit;
+
   return (
-    <Modal onClose={onClose} title={t.loginRegisterBtn} maxWidth="max-w-md">
+    <Modal onClose={onClose} title={title} maxWidth="max-w-md">
       <ModalHeader onClose={onClose} closeLabel={t.closeLabel} title={t.loginRegisterBtn} />
       <div className="p-5 sm:p-6">
-        <p className="text-xs text-slate-600 mb-3 leading-relaxed">{t.memberRequiredDesc}</p>
-        <p className="flex items-start gap-2 text-[11px] text-amber-900 bg-amber-50 border border-amber-200 rounded-xl p-2.5 mb-4">
-          <Info className="w-4 h-4 shrink-0 text-amber-600" />
-          {t.prototypeNote}
-        </p>
-
-        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3.5 mb-5">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-blue-800 mb-2">⚡ {t.demoLoginTitle}</div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <button type="button" onClick={() => onDemoLogin('client')} className="px-3 py-2 rounded-xl bg-white hover:bg-blue-600 hover:text-white text-blue-900 border border-blue-200 text-xs font-bold transition">
-              👤 {t.roleClient}
-            </button>
-            <button type="button" onClick={() => onDemoLogin('pro')} className="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition">
-              🛠️ {t.rolePro}
-            </button>
-          </div>
-        </div>
-
-        <form onSubmit={submit} className="space-y-3.5">
-          <div className="grid grid-cols-2 gap-2" role="radiogroup">
-            {[['client', '👤', t.roleClient], ['pro', '🛠️', t.rolePro]].map(([role, icon, label]) => (
+        {mode !== 'forgot' && (
+          <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100 mb-4" role="tablist">
+            {[['login', t.loginTab], ['signup', t.signupTab]].map(([m, label]) => (
               <button
-                key={role}
+                key={m}
                 type="button"
-                role="radio"
-                aria-checked={form.role === role}
-                onClick={() => set({ role })}
-                className={`py-2 px-3 rounded-xl text-xs font-bold border transition ${
-                  form.role === role ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-600 border-slate-200'
-                }`}
+                role="tab"
+                aria-selected={mode === m}
+                onClick={() => switchMode(m)}
+                className={`py-2 rounded-lg text-sm font-bold transition ${mode === m ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
               >
-                {icon} {label}
+                {label}
               </button>
             ))}
           </div>
+        )}
 
-          <Field label={`${t.fullName} *`}>
-            <input type="text" required autoComplete="name" value={form.name} onChange={(e) => set({ name: e.target.value })} placeholder={t.fullNamePh} className={inputCls} />
-          </Field>
+        {mode === 'signup' && <p className="text-xs text-slate-600 mb-4 leading-relaxed">{t.memberRequiredDesc}</p>}
+
+        <form onSubmit={submit} className="space-y-3.5">
+          {mode === 'signup' && (
+            <>
+              <div className="grid grid-cols-2 gap-2" role="radiogroup">
+                {[['client', '👤', t.roleClient], ['pro', '🛠️', t.rolePro]].map(([role, icon, label]) => (
+                  <button
+                    key={role}
+                    type="button"
+                    role="radio"
+                    aria-checked={form.role === role}
+                    onClick={() => set({ role })}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold border transition ${
+                      form.role === role ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-600 border-slate-200'
+                    }`}
+                  >
+                    {icon} {label}
+                  </button>
+                ))}
+              </div>
+              <Field label={`${t.fullName} *`}>
+                <input type="text" required maxLength={80} autoComplete="name" value={form.name} onChange={(e) => set({ name: e.target.value })} placeholder={t.fullNamePh} className={inputCls} />
+              </Field>
+            </>
+          )}
+
           <Field label={`${t.email} *`}>
             <input type="email" required autoComplete="email" value={form.email} onChange={(e) => set({ email: e.target.value })} placeholder="nome@email.com" className={inputCls} />
           </Field>
-          <div className="grid grid-cols-2 gap-2">
-            <Field label={t.countryLabel}>
-              <select value={form.country} onChange={(e) => set({ country: e.target.value })} className={inputCls}>
-                {COUNTRIES.filter((c) => c.code !== 'ALL').map((c) => (
-                  <option key={c.code} value={c.code}>{c.flag} {pick(c.names, lang)}</option>
-                ))}
-              </select>
-            </Field>
-            <Field label={t.cityLabel}>
-              <input type="text" value={form.city} onChange={(e) => set({ city: e.target.value })} className={inputCls} />
-            </Field>
-          </div>
 
-          <label className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-950 cursor-pointer">
-            <input type="checkbox" required checked={form.acceptedTerms} onChange={(e) => set({ acceptedTerms: e.target.checked })} className="mt-0.5" />
-            <span>
-              {t.termsAcceptCheck}{' '}
-              <button type="button" onClick={onShowTerms} className="underline font-bold">({t.readTerms})</button>
-            </span>
-          </label>
+          {mode !== 'forgot' && (
+            <Field label={`${t.password} *`}>
+              <input
+                type="password"
+                required
+                minLength={mode === 'signup' ? 8 : undefined}
+                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                value={form.password}
+                onChange={(e) => set({ password: e.target.value })}
+                placeholder={mode === 'signup' ? t.passwordPh : ''}
+                className={inputCls}
+              />
+            </Field>
+          )}
 
-          <button type="submit" className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md transition">
-            {t.registerSubmit}
+          {mode === 'login' && (
+            <button type="button" onClick={() => switchMode('forgot')} className="text-xs font-semibold text-blue-600 hover:underline">
+              {t.forgotPassword}
+            </button>
+          )}
+
+          {mode === 'signup' && (
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                <Field label={t.countryLabel}>
+                  <select value={form.country} onChange={(e) => set({ country: e.target.value })} className={inputCls}>
+                    {COUNTRIES.filter((c) => c.code !== 'ALL').map((c) => (
+                      <option key={c.code} value={c.code}>{pick(c.names, lang)}</option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label={t.cityLabel}>
+                  <input type="text" maxLength={80} autoComplete="address-level2" value={form.city} onChange={(e) => set({ city: e.target.value })} className={inputCls} />
+                </Field>
+              </div>
+              <label className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-950 cursor-pointer">
+                <input type="checkbox" required checked={form.acceptedTerms} onChange={(e) => set({ acceptedTerms: e.target.checked })} className="mt-0.5" />
+                <span>
+                  {t.termsAcceptCheck}{' '}
+                  <button type="button" onClick={onShowTerms} className="underline font-bold">({t.readTerms})</button>
+                </span>
+              </label>
+            </>
+          )}
+
+          {error && <p role="alert" className="text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl p-2.5">{error}</p>}
+          {info && <p role="status" className="text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl p-2.5">{info}</p>}
+
+          <button type="submit" disabled={busy} className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold text-sm shadow-md transition">
+            {busy ? t.loading : submitLabel}
           </button>
+
+          {mode === 'forgot' && (
+            <button type="button" onClick={() => switchMode('login')} className="w-full text-xs font-semibold text-slate-600 hover:underline">
+              {t.backToLogin}
+            </button>
+          )}
         </form>
       </div>
+    </Modal>
+  );
+}
+
+/* ============================ NUOVA PASSWORD (dal link email) ============================ */
+export function NewPasswordModal({ t, onClose, onDone }) {
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (password.length < 8) return setError(t.authErrorWeak);
+    setBusy(true);
+    setError('');
+    try {
+      await updatePassword(password);
+      onDone();
+    } catch (err) {
+      setError(t[authErrorKey(err)] || t.authErrorGeneric);
+    } finally {
+      setBusy(false);
+    }
+    return undefined;
+  };
+
+  return (
+    <Modal onClose={onClose} title={t.newPasswordTitle} maxWidth="max-w-md">
+      <ModalHeader onClose={onClose} closeLabel={t.closeLabel} title={t.newPasswordTitle} />
+      <form onSubmit={submit} className="p-5 sm:p-6 space-y-3.5">
+        <Field label={`${t.password} *`}>
+          <input type="password" required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t.passwordPh} className={inputCls} />
+        </Field>
+        {error && <p role="alert" className="text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl p-2.5">{error}</p>}
+        <button type="submit" disabled={busy} className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold text-sm">
+          {busy ? t.loading : t.newPasswordSubmit}
+        </button>
+      </form>
     </Modal>
   );
 }
@@ -151,6 +286,7 @@ export function PublishModal({ lang, t, user, defaultCountry, onClose, onShowTer
     acceptedTerms: false,
   });
   const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
   const set = (patch) => setAd((a) => ({ ...a, ...patch }));
 
   const cities = useMemo(() => COUNTRIES.find((c) => c.code === ad.country)?.cities || [], [ad.country]);
@@ -167,8 +303,9 @@ export function PublishModal({ lang, t, user, defaultCountry, onClose, onShowTer
     set({ cityChoice: id, zoneChoice: z || OTHER, customZone: '' });
   };
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
+    if (busy) return;
     const city = (ad.cityChoice === OTHER ? ad.customCity : ad.cityChoice).trim();
     const zone = (ad.zoneChoice === OTHER || ad.cityChoice === OTHER ? ad.customZone : ad.zoneChoice).trim();
     if (!ad.acceptedTerms || !ad.name.trim() || !ad.title.trim() || !ad.description.trim() || !city || !zone) return;
@@ -177,7 +314,10 @@ export function PublishModal({ lang, t, user, defaultCountry, onClose, onShowTer
       return;
     }
     setError('');
-    onPublish({ ...ad, city, zone, currency });
+    setBusy(true);
+    const ok = await onPublish({ ...ad, city, zone, currency });
+    setBusy(false);
+    if (!ok) setError(t.publishError);
   };
 
   const cityIsOther = ad.cityChoice === OTHER;
@@ -202,7 +342,7 @@ export function PublishModal({ lang, t, user, defaultCountry, onClose, onShowTer
             <Field label={`${t.countryLabel} *`}>
               <select value={ad.country} onChange={(e) => onCountry(e.target.value)} className={inputCls}>
                 {COUNTRIES.filter((c) => c.code !== 'ALL').map((c) => (
-                  <option key={c.code} value={c.code}>{c.flag} {pick(c.names, lang)}</option>
+                  <option key={c.code} value={c.code}>{pick(c.names, lang)}</option>
                 ))}
               </select>
             </Field>
@@ -285,8 +425,8 @@ export function PublishModal({ lang, t, user, defaultCountry, onClose, onShowTer
 
           {error && <p role="alert" className="text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl p-2.5">{error}</p>}
 
-          <button type="submit" className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md transition">
-            {t.publishSubmitBtn}
+          <button type="submit" disabled={busy} className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold text-sm shadow-md transition">
+            {busy ? t.loading : t.publishSubmitBtn}
           </button>
         </form>
       </div>
@@ -320,7 +460,7 @@ export function SmartMatchModal({ lang, t, listings, defaultCountry, onClose, on
           <Field label={t.countryLabel}>
             <select value={country} onChange={(e) => setCountry(e.target.value)} className={inputCls}>
               {COUNTRIES.filter((c) => c.code !== 'ALL').map((c) => (
-                <option key={c.code} value={c.code}>{c.flag} {pick(c.names, lang)}</option>
+                <option key={c.code} value={c.code}>{pick(c.names, lang)}</option>
               ))}
             </select>
           </Field>
