@@ -65,7 +65,7 @@ export function Modal({ onClose, title, children, maxWidth = 'max-w-2xl', z = 'z
 
   return (
     <div
-      className={`fixed inset-0 ${z} bg-slate-950/70 backdrop-blur-sm flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto`}
+      className={`fixed inset-0 ${z} bg-slate-950/70 backdrop-blur-sm flex items-start sm:items-center justify-center p-3 sm:p-6 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] overflow-y-auto`}
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
@@ -117,7 +117,7 @@ export function Toast({ toast, onDismiss }) {
     <div
       role="status"
       aria-live="polite"
-      className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-[70] max-w-[92vw] sm:max-w-md px-4 py-3 rounded-2xl shadow-2xl text-sm font-semibold flex items-start gap-2.5 ${
+      className={`fixed bottom-[calc(1rem+var(--ad-h,0px)+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[70] max-w-[92vw] sm:max-w-md px-4 py-3 rounded-2xl shadow-2xl text-sm font-semibold flex items-start gap-2.5 ${
         isError ? 'bg-rose-600 text-white' : 'bg-slate-900 text-white'
       }`}
     >

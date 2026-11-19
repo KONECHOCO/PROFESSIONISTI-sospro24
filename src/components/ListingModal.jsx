@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldCheck, Star, Phone, MessageCircle, AlertTriangle, ThumbsUp, Flag, Send, Info } from 'lucide-react';
+import { ShieldCheck, Star, Phone, MessageCircle, AlertTriangle, ThumbsUp, Flag, Send, Info, UserX } from 'lucide-react';
 import { Avatar, Modal, ModalHeader, Stars } from './ui';
 import { FEEDBACK_TAGS } from '../data';
 import {
@@ -8,7 +8,7 @@ import {
 
 export default function ListingModal({
   listing, lang, t, currentUser, myVotes, loadContact,
-  onClose, onLogin, onAddReview, onHelpful, onReportReview, onReportAd, onToast,
+  onClose, onLogin, onAddReview, onHelpful, onReportReview, onReportAd, onBlockUser, onToast,
 }) {
   const [rating, setRating] = useState(5);
   const [tags, setTags] = useState([]);
@@ -199,11 +199,17 @@ export default function ListingModal({
           </div>
         </div>
 
-        <div className="flex justify-end -mt-3">
+        <div className="flex justify-end gap-4 -mt-3">
           <button type="button" onClick={() => onReportAd(listing.id)} className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-rose-600">
             <Flag className="w-3 h-3" />
             {t.reportAdBtn}
           </button>
+          {listing.ownerId && listing.ownerId !== currentUser?.id && (
+            <button type="button" onClick={() => onBlockUser(listing.ownerId)} className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-rose-600">
+              <UserX className="w-3 h-3" />
+              {t.blockUser}
+            </button>
+          )}
         </div>
 
         {/* Recensioni */}
@@ -339,6 +345,16 @@ export default function ListingModal({
                         <Flag className="w-3 h-3" />
                         {t.reportReview}
                       </button>
+                      {rev.userId && rev.userId !== currentUser?.id && (
+                        <button
+                          type="button"
+                          onClick={() => onBlockUser(rev.userId)}
+                          className="inline-flex items-center gap-1 hover:text-rose-600"
+                        >
+                          <UserX className="w-3 h-3" />
+                          {t.blockUser}
+                        </button>
+                      )}
                     </div>
                   </div>
                 );

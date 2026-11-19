@@ -326,3 +326,25 @@ grant execute on function public.waitlist_count(text, text, text) to anon, authe
 revoke execute on function public.handle_new_user() from public, anon, authenticated;
 revoke execute on function public.set_review_author() from public, anon, authenticated;
 revoke execute on function public.update_helpful_count() from public, anon, authenticated;
+
+-- ============================================================================
+-- Eliminazione dell'account dall'app (obbligatoria per App Store e Google Play).
+-- Cancella l'utente di Supabase Auth: profilo, annunci, contatti, recensioni e voti
+-- spariscono a cascata (on delete cascade); le segnalazioni restano anonime.
+-- ============================================================================
+create or replace function public.delete_my_account()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'not authenticated';
+  end if;
+  delete from auth.users where id = auth.uid();
+end;
+$$;
+
+revoke all on function public.delete_my_account() from public, anon;
+grant execute on function public.delete_my_account() to authenticated;

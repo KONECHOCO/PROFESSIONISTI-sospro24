@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ShieldCheck, LogOut, Trash2 } from 'lucide-react';
+import { ShieldCheck, LogOut, Trash2, QrCode } from 'lucide-react';
 import { Avatar, Modal, ModalHeader } from './ui';
 import { COUNTRIES, CATEGORIES, LEGAL_SECTIONS } from '../data';
 import { pick, isValidPhone, currencyOf, countryName } from '../lib/utils';
@@ -501,7 +501,7 @@ export function SmartMatchModal({ lang, t, listings, defaultCountry, onClose, on
 }
 
 /* ============================ PROFILO UTENTE ============================ */
-export function ProfileModal({ lang, t, user, listings, favorites, onClose, onOpen, onPublish, onToggleRole, onLogout, onDeleteAd }) {
+export function ProfileModal({ lang, t, user, listings, favorites, onClose, onOpen, onPublish, onToggleRole, onLogout, onDeleteAd, onQrCard, onDeleteAccount }) {
   const favs = listings.filter((l) => favorites.includes(l.id));
   const mine = listings.filter((l) => l.ownerId === user.id);
 
@@ -538,9 +538,14 @@ export function ProfileModal({ lang, t, user, listings, favorites, onClose, onOp
                   <button type="button" onClick={() => onOpen(ad.id)} className="font-bold text-slate-800 hover:text-blue-600 text-left truncate">
                     {pick(ad.titles, lang)}
                   </button>
-                  <button type="button" onClick={() => onDeleteAd(ad.id)} className="inline-flex items-center gap-1 text-rose-600 font-bold hover:underline shrink-0">
-                    <Trash2 className="w-3.5 h-3.5" /> {t.deleteAd}
-                  </button>
+                  <span className="flex items-center gap-3 shrink-0">
+                    <button type="button" onClick={() => onQrCard(ad.id)} className="inline-flex items-center gap-1 text-blue-600 font-bold hover:underline">
+                      <QrCode className="w-3.5 h-3.5" /> {t.qrCardBtn}
+                    </button>
+                    <button type="button" onClick={() => onDeleteAd(ad.id)} className="inline-flex items-center gap-1 text-rose-600 font-bold hover:underline">
+                      <Trash2 className="w-3.5 h-3.5" /> {t.deleteAd}
+                    </button>
+                  </span>
                 </div>
               ))}
             </div>
@@ -569,6 +574,11 @@ export function ProfileModal({ lang, t, user, listings, favorites, onClose, onOp
           </button>
           <button type="button" onClick={onLogout} className="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold flex items-center gap-1.5">
             <LogOut className="w-3.5 h-3.5" /> {t.logout}
+          </button>
+        </div>
+        <div className="text-center">
+          <button type="button" onClick={onDeleteAccount} className="text-[11px] font-semibold text-slate-500 hover:text-rose-700 underline">
+            {t.deleteAccount}
           </button>
         </div>
       </div>

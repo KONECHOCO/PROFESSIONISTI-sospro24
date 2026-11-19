@@ -2,7 +2,9 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Search, ShieldCheck, Zap, PlusCircle, User, Globe, Filter, AlertTriangle, Wrench,
   HeartHandshake, Sparkles, Laptop, X, FileText, ArrowUpDown, Info, Siren, LocateFixed,
+  Crown, Settings, BookmarkPlus, Bookmark,
 } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 import Flag from './components/Flag';
 import { LANGUAGES, COUNTRIES, CATEGORIES, UI_TEXT } from './data';
 import { INITIAL_LISTINGS } from './data/mockListings';
@@ -11,14 +13,25 @@ import ListingModal from './components/ListingModal';
 import EmptyState from './components/EmptyState';
 import { AuthModal, NewPasswordModal, PublishModal, SmartMatchModal, ProfileModal, TermsModal } from './components/Modals';
 import { Toast } from './components/ui';
+import { PremiumModal, AdSpacer, AdDiagnostics } from './components/Premium';
+import SettingsModal from './components/SettingsModal';
+import QrCardModal from './components/QrCardModal';
+import { initMonetization, trackAdAction, toggleTestAds, useMonetization, hasPremium } from './services/monetization';
+import { initReferral } from './services/referral';
 import {
   usePersistentState, loadJSON, normalizeListing, getCityOptions, getZoneOptions,
-  pick, categoryName, subcategoryName, detectCountry, nearestCity, getPosition,
+  pick, categoryName, subcategoryName, detectCountry, nearestCity, getPosition, countryName,
 } from './lib/utils';
 import { supabase, isSupabaseConfigured, SHOW_DEMO } from './lib/supabase';
 import * as api from './lib/api';
 
 const CATEGORY_ICONS = { home_sos: Wrench, care_person: HeartHandshake, beauty_events: Sparkles, consulting_tech: Laptop };
+
+const FREE_FAVORITES = 10;
+const isNative = Capacitor.isNativePlatform();
+
+// Link condivisi / QR del biglietto da visita: https://sospro24.com/?ad=<id> apre l'annuncio
+const sharedAdId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('ad') : null;
 
 const stripAccents = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
@@ -37,6 +50,34 @@ export default function App() {
   const [lang, setLang] = usePersistentState('sospro_lang', detectLanguage());
   const t = UI_TEXT[lang] || UI_TEXT.it;
   const [favorites, setFavorites] = usePersistentState('sospro_favs_v2', []);
+  const [blocked, setBlocked] = usePersistentState('sospro_blocked_v1', []);
+  const [savedSearches, setSavedSearches] = usePersistentState('sospro_saved_searches_v1', []);
+  const [dark, setDark] = usePersistentState('sospro_dark_v1', false);
+
+  /* ------------------------------ Pubblicità, Premium, inviti (solo app nativa) ------------------------------ */
+  const monetization = useMonetization();
+  const premium = hasPremium(monetization);
+  const [showPremium, setShowPremium] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [qrListingId, setQrListingId] = useState(null);
+
+  useEffect(() => {
+    initMonetization();
+    if (isNative) initReferral();
+  }, []);
+
+  // Il tema scuro è Premium nell'app (sul sito è libero)
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', Boolean(dark && premium));
+  }, [dark, premium]);
+
+  // Altezza del banner AdMob: serve a toast e pulsante SOS per non finirci sotto
+  useEffect(() => {
+    document.documentElement.style.setProperty('--ad-h', `${premium ? 0 : monetization.bannerHeight || 0}px`);
+  }, [premium, monetization.bannerHeight]);
+
+  // 7 tocchi sul logo nell'app = annunci di test sì/no (per le prove sul telefono)
+  const [logoTaps, setLogoTaps] = useState({ n: 0, at: 0 });
 
   useEffect(() => {
     try { LEGACY_KEYS.forEach((k) => localStorage.removeItem(k)); } catch { /* ignore */ }
@@ -142,9 +183,12 @@ export default function App() {
     return undefined;
   }, [userId]);
 
+  // Le persone bloccate spariscono: i loro annunci e le loro recensioni non si vedono più
   const listings = useMemo(
-    () => [...dbListings, ...(SHOW_DEMO ? INITIAL_LISTINGS : [])].map((l) => normalizeListing(l)),
-    [dbListings]
+    () => [...dbListings, ...(SHOW_DEMO ? INITIAL_LISTINGS : [])]
+      .filter((l) => !blocked.includes(l.ownerId))
+      .map((l) => normalizeListing({ ...l, reviews: (l.reviews || []).filter((r) => !blocked.includes(r.userId)) })),
+    [dbListings, blocked]
   );
 
   /* ------------------------------ Filtri ------------------------------ */
@@ -209,7 +253,10 @@ export default function App() {
   }, [listings, selectedCountry, selectedCity, selectedZone, selectedCategory, selectedSubcategory, onlySos, onlyVerified, searchQuery, sortBy, lang]);
 
   /* ------------------------------ Finestre ------------------------------ */
-  const [activeListingId, setActiveListingId] = useState(null);
+  const [activeListingId, setActiveListingId] = useState(sharedAdId);
+  useEffect(() => {
+    if (sharedAdId) window.history.replaceState(null, '', window.location.pathname);
+  }, []);
   const [showAuth, setShowAuth] = useState(false);
   const [authNext, setAuthNext] = useState(null);
   const [showTerms, setShowTerms] = useState(false);
@@ -276,7 +323,88 @@ export default function App() {
   };
 
   /* ------------------------------ Azioni ------------------------------ */
-  const toggleFavorite = (id) => setFavorites((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  const toggleFavorite = (id) => {
+    if (!favorites.includes(id) && !premium && favorites.length >= FREE_FAVORITES) {
+      showToast(t.favLimitReached, 'error');
+      setShowPremium(true);
+      return;
+    }
+    setFavorites((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
+  // Apertura di un annuncio dall'elenco: è un "punto di passaggio" per gli interstitial (mai sul contatto urgente)
+  const openFromList = (id) => {
+    trackAdAction();
+    setActiveListingId(id);
+  };
+
+  const blockUser = (ownerId) => {
+    if (!ownerId || !window.confirm(t.blockConfirm)) return;
+    setBlocked((prev) => (prev.includes(ownerId) ? prev : [...prev, ownerId]));
+    setActiveListingId(null);
+    showToast(t.userBlocked);
+  };
+
+  const deleteAccount = async () => {
+    if (!window.confirm(t.deleteAccountConfirm)) return;
+    try {
+      await api.deleteAccount();
+      setShowProfile(false);
+      setSession(null);
+      await reload();
+      showToast(t.accountDeleted);
+    } catch {
+      showToast(t.actionError, 'error');
+    }
+  };
+
+  const openQrCard = (id) => {
+    if (!premium) return setShowPremium(true);
+    setShowProfile(false);
+    return setQrListingId(id);
+  };
+
+  const onLogoTap = () => {
+    resetAllFilters();
+    if (!isNative) return;
+    const now = Date.now();
+    const n = now - logoTaps.at < 1500 ? logoTaps.n + 1 : 1;
+    if (n >= 7) {
+      showToast(toggleTestAds() ? t.testAdsOn : t.testAdsOff);
+      setLogoTaps({ n: 0, at: 0 });
+    } else setLogoTaps({ n, at: now });
+  };
+
+  /* ------------------------------ Ricerche salvate (Premium) ------------------------------ */
+  const currentSearch = {
+    country: selectedCountry, city: selectedCity, zone: selectedZone, category: selectedCategory,
+    subcategory: selectedSubcategory, q: searchQuery.trim(), sos: onlySos, verified: onlyVerified,
+  };
+  const searchKey = (x) => JSON.stringify([x.country, x.city, x.zone, x.category, x.subcategory, x.q.toLowerCase(), x.sos, x.verified]);
+  const subcategoryLabel = (x) => {
+    const catId = x.category !== 'ALL' ? x.category : CATEGORIES.find((c) => c.subcategories.some((sc) => sc.id === x.subcategory))?.id;
+    return subcategoryName(catId, x.subcategory, lang);
+  };
+  const searchLabel = (x) => [
+    x.q && `"${x.q}"`,
+    x.subcategory !== 'ALL' ? subcategoryLabel(x) : x.category !== 'ALL' && categoryName(x.category, lang),
+    x.city !== 'ALL' ? (x.zone !== 'ALL' ? `${x.city} · ${x.zone}` : x.city) : x.country !== 'ALL' && countryName(x.country, lang),
+    x.sos && 'SOS',
+  ].filter(Boolean).join(' · ') || t.allCategories;
+
+  const saveSearch = () => {
+    if (!premium) return setShowPremium(true);
+    const key = searchKey(currentSearch);
+    if (savedSearches.some((x) => searchKey(x) === key)) return showToast(t.searchAlreadySaved);
+    setSavedSearches((prev) => [{ ...currentSearch, id: Date.now() }, ...prev].slice(0, 20));
+    return showToast(t.searchSaved);
+  };
+
+  const applySearch = (x) => {
+    setSearchQuery(x.q); setSelectedCountry(x.country); setSelectedCity(x.city); setSelectedZone(x.zone);
+    setSelectedCategory(x.category); setSelectedSubcategory(x.subcategory); setOnlySos(x.sos); setOnlyVerified(x.verified);
+    trackAdAction();
+  };
 
   const addReview = async (listingId, { rating, tags, comment }) => {
     const target = listings.find((l) => l.id === listingId);
@@ -358,6 +486,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
+      {/* Zona della notch nell'app: resta colorata anche quando si scorre */}
+      <div className="fixed top-0 inset-x-0 z-[45] bg-red-700" style={{ height: 'env(safe-area-inset-top)' }} aria-hidden="true" />
+      <div className="bg-red-700 shrink-0" style={{ height: 'env(safe-area-inset-top)' }} aria-hidden="true" />
       {/* Barra emergenze vitali */}
       <div className="bg-red-700 text-white text-xs">
         <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center gap-2 justify-center text-center font-semibold">
@@ -396,9 +527,9 @@ export default function App() {
       </div>
 
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+      <header className="sticky z-30 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm" style={{ top: 'env(safe-area-inset-top)' }}>
         <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-          <button type="button" onClick={resetAllFilters} className="flex items-center gap-3 group text-left" aria-label="SOSPro24 Global — home">
+          <button type="button" onClick={onLogoTap} className="flex items-center gap-3 group text-left" aria-label="SOSPro24 Global — home">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-slate-900 flex items-center justify-center text-white shadow-md relative">
               <Zap className="w-5 h-5 fill-white" />
               <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500 border-2 border-white sos-pulse" />
@@ -415,6 +546,26 @@ export default function App() {
           </button>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            {isNative && !monetization.isPro && (
+              <button
+                type="button"
+                onClick={() => setShowPremium(true)}
+                aria-label={t.premiumName}
+                className="flex items-center gap-1 px-2.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs transition"
+              >
+                <Crown className="w-4 h-4" />
+                <span className="hidden sm:inline">{t.premiumBtn}</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setShowSettings(true)}
+              aria-label={t.settingsBtn}
+              title={t.settingsBtn}
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
             <button
               type="button"
               onClick={() => setShowSmartMatch(true)}
@@ -497,7 +648,7 @@ export default function App() {
 
               <div className="md:col-span-2">
                 <label className={mainFilterLabel} htmlFor="f-city">{t.cityLabel}</label>
-                <select id="f-city" value={selectedCity} onChange={(e) => { setSelectedCity(e.target.value); setSelectedZone('ALL'); }} className={selectCls}>
+                <select id="f-city" value={selectedCity} onChange={(e) => { setSelectedCity(e.target.value); setSelectedZone('ALL'); trackAdAction(); }} className={selectCls}>
                   <option value="ALL">{t.allCities}</option>
                   {cityOptions.map((city) => <option key={city} value={city}>{city}</option>)}
                 </select>
@@ -582,7 +733,7 @@ export default function App() {
                   key={cat.id}
                   type="button"
                   aria-pressed={isSelected}
-                  onClick={() => { setSelectedCategory(isSelected ? 'ALL' : cat.id); setSelectedSubcategory('ALL'); }}
+                  onClick={() => { setSelectedCategory(isSelected ? 'ALL' : cat.id); setSelectedSubcategory('ALL'); trackAdAction(); }}
                   className={`p-3 rounded-xl border text-left transition flex items-center gap-2.5 ${isSelected ? 'bg-blue-600 text-white border-blue-400 shadow-lg' : 'bg-slate-800/90 text-slate-200 border-slate-700 hover:bg-slate-800'}`}
                 >
                   <Icon className="w-5 h-5 shrink-0 text-blue-300" />
@@ -621,6 +772,17 @@ export default function App() {
             {hasFilters && (
               <button type="button" onClick={resetAllFilters} className="text-xs font-semibold text-blue-600 hover:text-blue-800 underline ml-2">{t.resetFilters}</button>
             )}
+            {hasFilters && (
+              <button
+                type="button"
+                onClick={saveSearch}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold border border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100 transition"
+              >
+                <BookmarkPlus className="w-3.5 h-3.5" />
+                {t.saveSearch}
+                {!premium && <Crown className="w-3 h-3 text-amber-600" aria-label={t.premiumFeature} />}
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-2 max-w-full">
             <button
@@ -649,6 +811,31 @@ export default function App() {
             </div>
           </div>
         </div>
+
+        {premium && savedSearches.length > 0 && (
+          <div className="mb-5 -mt-2">
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">{t.savedSearches}</h3>
+            <div className="flex flex-wrap gap-2">
+              {savedSearches.map((x) => (
+                <span key={x.id} className="inline-flex items-center rounded-full border border-slate-200 bg-white text-xs font-semibold text-slate-700 overflow-hidden">
+                  <button type="button" onClick={() => applySearch(x)} className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 hover:bg-slate-100">
+                    <Bookmark className="w-3.5 h-3.5 text-blue-600" />
+                    {searchLabel(x)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSavedSearches((prev) => prev.filter((y) => y.id !== x.id))}
+                    aria-label={t.removeSavedSearch}
+                    title={t.removeSavedSearch}
+                    className="px-2 py-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {loadState === 'error' && isSupabaseConfigured && (
           <div className="bg-white rounded-2xl border border-rose-200 p-8 text-center max-w-xl mx-auto my-6 shadow-sm">
@@ -685,7 +872,7 @@ export default function App() {
                 t={t}
                 isFav={favorites.includes(pro.id)}
                 onToggleFav={toggleFavorite}
-                onOpen={setActiveListingId}
+                onOpen={openFromList}
                 onContact={(id) => requireAuth(() => setActiveListingId(id))}
               />
             ))}
@@ -704,7 +891,7 @@ export default function App() {
         </section>
       </main>
 
-      <footer className="bg-slate-900 text-slate-400 py-8 px-4 border-t border-slate-800 mt-12 pb-24 md:pb-8">
+      <footer className="bg-slate-900 text-slate-400 py-8 px-4 border-t border-slate-800 mt-12 pb-24 md:pb-[max(2rem,env(safe-area-inset-bottom))]">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
           <div className="flex items-center gap-2 text-center sm:text-left">
             <Zap className="w-4 h-4 text-blue-400 shrink-0" />
@@ -712,16 +899,19 @@ export default function App() {
           </div>
           <div className="flex items-center gap-4">
             <button type="button" onClick={() => setShowTerms(true)} className="hover:text-white underline">{t.readTerms}</button>
+            <a href={`https://sospro24.com/privacy.html#${lang}`} target="_blank" rel="noopener" className="hover:text-white underline">Privacy</a>
+            <a href={`https://sospro24.com/support.html#${lang}`} target="_blank" rel="noopener" className="hover:text-white underline">{t.supportLink}</a>
             {!currentUser && <button type="button" onClick={() => setShowAuth(true)} className="hover:text-white underline">{t.loginRegisterBtn}</button>}
           </div>
         </div>
       </footer>
+      <AdSpacer />
 
       {/* Pulsante SOS flottante su mobile (nel header è nascosto sotto i 768px) */}
       <button
         type="button"
         onClick={() => setShowSmartMatch(true)}
-        className="md:hidden fixed bottom-4 right-4 z-40 flex items-center gap-2 px-4 py-3 rounded-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-sm shadow-xl"
+        className="md:hidden fixed bottom-[calc(1rem+var(--ad-h,0px)+env(safe-area-inset-bottom))] right-4 z-40 flex items-center gap-2 px-4 py-3 rounded-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-sm shadow-xl"
       >
         <span className="w-2 h-2 rounded-full bg-white sos-pulse" />
         SOS
@@ -743,6 +933,7 @@ export default function App() {
           onHelpful={markHelpful}
           onReportReview={(listingId, reviewId) => report({ listingId, reviewId })}
           onReportAd={(listingId) => report({ listingId })}
+          onBlockUser={blockUser}
           onToast={showToast}
         />
       )}
@@ -801,10 +992,38 @@ export default function App() {
           onToggleRole={toggleRole}
           onLogout={logout}
           onDeleteAd={deleteAd}
+          onQrCard={openQrCard}
+          onDeleteAccount={deleteAccount}
         />
       )}
 
       {showTerms && <TermsModal lang={lang} t={t} onClose={() => setShowTerms(false)} />}
+
+      {showSettings && (
+        <SettingsModal
+          t={t}
+          dark={dark}
+          onToggleDark={() => setDark((d) => !d)}
+          blockedCount={blocked.length}
+          onUnblockAll={() => setBlocked([])}
+          onOpenPremium={() => setShowPremium(true)}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {showPremium && <PremiumModal t={t} onClose={() => setShowPremium(false)} />}
+
+      {qrListingId && listings.some((l) => l.id === qrListingId) && (
+        <QrCardModal
+          t={t}
+          lang={lang}
+          listing={listings.find((l) => l.id === qrListingId)}
+          onClose={() => setQrListingId(null)}
+          onToast={showToast}
+        />
+      )}
+
+      <AdDiagnostics />
 
       <Toast toast={toast} onDismiss={dismissToast} />
     </div>

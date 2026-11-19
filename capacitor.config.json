@@ -1,0 +1,7 @@
+{
+  "appId": "com.ikonet.sospro24",
+  "appName": "SOSPro24",
+  "webDir": "dist",
+  "ios": { "contentInset": "never", "backgroundColor": "#0f172a" },
+  "android": { "backgroundColor": "#0f172a" }
+}

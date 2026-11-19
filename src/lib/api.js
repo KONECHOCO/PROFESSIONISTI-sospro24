@@ -170,6 +170,12 @@ export async function signOut() {
   await supabase.auth.signOut();
 }
 
+// Elimina definitivamente l'account e tutti i suoi dati (funzione delete_my_account in schema.sql)
+export async function deleteAccount() {
+  must(await supabase.rpc('delete_my_account'));
+  await supabase.auth.signOut({ scope: 'local' });
+}
+
 export async function sendPasswordReset(email) {
   must(await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.origin }));
 }

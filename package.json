@@ -9,12 +9,23 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor-community/admob": "^8.4.2",
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/geolocation": "^8.2.5",
+    "@capacitor/ios": "^8.6.2",
+    "@capacitor/share": "^8.0.3",
+    "@capgo/native-purchases": "^8.9.16",
     "@supabase/supabase-js": "^2.109.0",
     "lucide-react": "^0.460.0",
+    "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.6.2",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",

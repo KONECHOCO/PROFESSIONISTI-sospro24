@@ -7,6 +7,7 @@ import {
   LEGAL_SECTIONS as BASE_LEGAL,
 } from './i18n';
 import { EXTRA_TEXT, LEGAL_EXTRA } from './i18nExtra';
+import { APP_TEXT } from './i18nApp';
 
 export { LANGUAGES, COUNTRIES, CATEGORIES, FEEDBACK_TAGS };
 
@@ -14,7 +15,7 @@ export { LANGUAGES, COUNTRIES, CATEGORIES, FEEDBACK_TAGS };
 export const UI_TEXT = Object.fromEntries(
   LANGUAGES.map(({ code }) => [
     code,
-    { ...BASE_TEXT.it, ...EXTRA_TEXT.it, ...BASE_TEXT[code], ...EXTRA_TEXT[code] },
+    { ...BASE_TEXT.it, ...EXTRA_TEXT.it, ...APP_TEXT.it, ...BASE_TEXT[code], ...EXTRA_TEXT[code], ...APP_TEXT[code] },
   ])
 );
 

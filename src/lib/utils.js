@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { Geolocation } from '@capacitor/geolocation';
 import { COUNTRIES, CATEGORIES, FEEDBACK_TAGS } from '../data';
 
 /* ---------- Storage sicuro (non esplode in navigazione privata) ---------- */
@@ -170,7 +172,16 @@ export function nearestCity(lat, lng, maxKm = 80) {
   return best && best.km <= maxKm ? best : null;
 }
 
-export const getPosition = () =>
+export const getPosition = async () => {
+  // Nell'app nativa si usa il plugin: un solo permesso di sistema, con il testo di Info.plist / AndroidManifest
+  if (Capacitor.isNativePlatform()) {
+    const p = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 });
+    return { lat: p.coords.latitude, lng: p.coords.longitude };
+  }
+  return getBrowserPosition();
+};
+
+const getBrowserPosition = () =>
   new Promise((resolve, reject) => {
     if (!navigator.geolocation) return reject(new Error('unsupported'));
     navigator.geolocation.getCurrentPosition(
