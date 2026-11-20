@@ -11,6 +11,8 @@ android {
         versionName "1.0.0"
         // AdMob App ID dell'app "SOSPro24 Android" (sovrascrivibile con ADMOB_ANDROID_APP_ID)
         manifestPlaceholders = [admobAppId: System.getenv("ADMOB_ANDROID_APP_ID") ?: "ca-app-pub-1151868778464777~4830394422"]
+        // Solo telefoni e tablet ARM: le librerie x86 servono agli emulatori e gonfiano l'AAB
+        ndk { abiFilters 'armeabi-v7a', 'arm64-v8a' }
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
