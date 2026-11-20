@@ -1,0 +1,11 @@
+SOSPro24 is a classified-ads board that connects clients with independent local professionals (plumbers, electricians, babysitters, cleaners, hairdressers, IT help...). Browsing needs no account.
+
+To test contacting a professional, publishing an ad, writing a review and deleting the account, sign in with the demo account below (button "Accedi / Registrati" or "Sign in").
+- Account deletion: open the profile (top right) > "Delete account". It erases the account, ads, phone numbers, reviews and votes immediately.
+- User-generated content: every ad and every review has "Report" and "Block this person". We review reports within 24 hours and remove objectionable content; the Terms of Use forbid it.
+
+SOSPro24 Premium (product sospro24_pro, non-consumable, one-time): removes all ads and unlocks saved searches, dark theme (Settings, gear icon), unlimited favourites and the QR business card for one's own ad (Profile > My ads > QR card). "Restore purchases" is in the same Premium screen.
+
+Optional invitation-code field (Settings, first 7 days only). Test code: TEST1. It only attributes the install to a referrer; no reward or content is unlocked for the user.
+
+The platform launched recently, so only a few real ads are listed; they are real professionals, not demo content. SOSPro24 is not an emergency service: the app shows the 112 / 999 emergency numbers at the top.
