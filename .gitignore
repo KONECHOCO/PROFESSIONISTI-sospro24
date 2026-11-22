@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 
 marketing/social/raw/
+marketing/heygen/*.zip
+~$*

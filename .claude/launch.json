@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 5173
+    },
+    {
+      "name": "sospro-demo",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "set VITE_SHOW_DEMO=true&& npx vite --port 5175 --strictPort"],
+      "port": 5175
     }
   ]
 }
