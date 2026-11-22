@@ -123,9 +123,75 @@ export async function voteHelpful(reviewId) {
   if (error && error.code !== '23505') throw error; // 23505 = voto già dato
 }
 
+/* ------------------------------ Richieste dei clienti ------------------------------ */
+const REQUEST_COLUMNS = 'id, owner_id, author_name, country, city, zone, category_id, subcategory_id, body, urgent, status, created_at, expires_at';
+
+export function mapRequest(row) {
+  return {
+    id: row.id,
+    ownerId: row.owner_id,
+    author: row.author_name,
+    country: row.country,
+    city: row.city,
+    zone: row.zone || '',
+    categoryId: row.category_id,
+    subcategoryId: row.subcategory_id,
+    body: row.body,
+    urgent: row.urgent,
+    status: row.status,
+    createdAt: row.created_at,
+    expiresAt: row.expires_at,
+  };
+}
+
+// Attive (e non scadute) di tutti + tutte le proprie: il filtro lo fa già la Row Level Security
+export async function fetchRequests() {
+  const rows = must(await supabase.from('requests').select(REQUEST_COLUMNS).order('created_at', { ascending: false }).limit(500));
+  return rows.map(mapRequest);
+}
+
+export async function fetchRequestContact(requestId) {
+  const data = must(await supabase.from('request_contacts').select('phone').eq('request_id', requestId).maybeSingle());
+  return data?.phone || null;
+}
+
+export async function createRequest(form) {
+  const created = must(
+    await supabase
+      .from('requests')
+      .insert({
+        country: form.country,
+        city: form.city,
+        zone: form.zone || '',
+        category_id: form.categoryId,
+        subcategory_id: form.subcategoryId,
+        body: form.body.trim(),
+        urgent: form.urgent,
+      })
+      .select('id')
+      .single()
+  );
+  const { error } = await supabase.from('request_contacts').insert({ request_id: created.id, phone: form.phone.trim() });
+  if (error) {
+    await supabase.from('requests').delete().eq('id', created.id);
+    throw error;
+  }
+  return created.id;
+}
+
+export async function closeRequest(id) {
+  must(await supabase.from('requests').update({ status: 'closed' }).eq('id', id));
+}
+
+export async function deleteRequest(id) {
+  must(await supabase.from('requests').delete().eq('id', id));
+}
+
 /* ------------------------------ Segnalazioni ------------------------------ */
-export async function report({ listingId = null, reviewId = null, reason = null }) {
-  must(await supabase.from('reports').insert({ listing_id: listingId, review_id: reviewId, reason }));
+export async function report({ listingId = null, reviewId = null, requestId = null, reason = null }) {
+  const row = { listing_id: listingId, review_id: reviewId, reason };
+  if (requestId) row.request_id = requestId;
+  must(await supabase.from('reports').insert(row));
 }
 
 /* ------------------------------ Lista d'attesa ------------------------------ */

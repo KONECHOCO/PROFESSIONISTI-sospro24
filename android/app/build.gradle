@@ -8,7 +8,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode Integer.parseInt(System.getenv("BUILD_NUMBER") ?: "1")
-        versionName "1.0.0"
+        versionName "1.1.0"
         // AdMob App ID dell'app "SOSPro24 Android" (sovrascrivibile con ADMOB_ANDROID_APP_ID)
         manifestPlaceholders = [admobAppId: System.getenv("ADMOB_ANDROID_APP_ID") ?: "ca-app-pub-1151868778464777~4830394422"]
         // Solo telefoni e tablet ARM: le librerie x86 servono agli emulatori e gonfiano l'AAB

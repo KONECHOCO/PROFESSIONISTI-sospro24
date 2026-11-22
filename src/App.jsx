@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Search, ShieldCheck, Zap, PlusCircle, User, Globe, Filter, AlertTriangle, Wrench,
   HeartHandshake, Sparkles, Laptop, X, FileText, ArrowUpDown, Info, Siren, LocateFixed,
-  Crown, Settings, BookmarkPlus, Bookmark,
+  Crown, Settings, BookmarkPlus, Bookmark, Megaphone,
 } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import Flag from './components/Flag';
@@ -16,6 +16,7 @@ import { Toast } from './components/ui';
 import { PremiumModal, AdSpacer, AdDiagnostics } from './components/Premium';
 import SettingsModal from './components/SettingsModal';
 import QrCardModal from './components/QrCardModal';
+import { RequestCard, RequestModal, PublishRequestModal, RequestCta } from './components/Requests';
 import { initMonetization, trackAdAction, toggleTestAds, useMonetization, hasPremium } from './services/monetization';
 import { initReferral } from './services/referral';
 import {
@@ -31,7 +32,11 @@ const FREE_FAVORITES = 10;
 const isNative = Capacitor.isNativePlatform();
 
 // Link condivisi / QR del biglietto da visita: https://sospro24.com/?ad=<id> apre l'annuncio
-const sharedAdId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('ad') : null;
+const startParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+const sharedAdId = startParams.get('ad');
+// https://sospro24.com/?req=<id> apre una richiesta; ?view=requests apre la bacheca delle richieste
+const sharedRequestId = startParams.get('req');
+const startView = sharedRequestId || startParams.get('view') === 'requests' ? 'requests' : 'pros';
 
 const stripAccents = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
@@ -176,6 +181,22 @@ export default function App() {
 
   useEffect(() => { reload(); }, [reload]);
 
+  /* ------------------------------ Richieste dei clienti ------------------------------ */
+  const [dbRequests, setDbRequests] = useState([]);
+  const [view, setView] = useState(startView);
+
+  const reloadRequests = useCallback(async () => {
+    if (!supabase) return;
+    try {
+      setDbRequests(await api.fetchRequests());
+    } catch {
+      /* la bacheca resta vuota: gli annunci funzionano comunque */
+    }
+  }, []);
+
+  // Ricarica anche al cambio di account: le proprie richieste chiuse si vedono solo da loggati
+  useEffect(() => { reloadRequests(); }, [reloadRequests, userId]);
+
   const [myVotes, setMyVotes] = useState(() => new Set());
   useEffect(() => {
     if (!userId) return setMyVotes(new Set());
@@ -252,11 +273,42 @@ export default function App() {
       });
   }, [listings, selectedCountry, selectedCity, selectedZone, selectedCategory, selectedSubcategory, onlySos, onlyVerified, searchQuery, sortBy, lang]);
 
+  // Richieste aperte (non scadute, non di persone bloccate) con gli stessi filtri degli annunci
+  const openRequests = useMemo(() => {
+    const now = Date.now();
+    return dbRequests.filter((r) => r.status === 'active' && new Date(r.expiresAt).getTime() > now && !blocked.includes(r.ownerId));
+  }, [dbRequests, blocked]);
+
+  const filteredRequests = useMemo(() => {
+    const q = stripAccents(searchQuery.trim());
+    return openRequests
+      .filter((r) => {
+        if (selectedCountry !== 'ALL' && r.country !== selectedCountry) return false;
+        if (selectedCity !== 'ALL' && r.city !== selectedCity) return false;
+        // Una richiesta per "tutta la città" vale per ogni zona
+        if (selectedZone !== 'ALL' && r.zone && r.zone !== selectedZone) return false;
+        if (selectedCategory !== 'ALL' && r.categoryId !== selectedCategory) return false;
+        if (selectedSubcategory !== 'ALL' && r.subcategoryId !== selectedSubcategory) return false;
+        if (onlySos && !r.urgent) return false;
+        if (q) {
+          const haystack = stripAccents(
+            [r.body, r.city, r.zone, categoryName(r.categoryId, lang), subcategoryName(r.categoryId, r.subcategoryId, lang)].join(' ')
+          );
+          if (!haystack.includes(q)) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => (a.urgent !== b.urgent ? (a.urgent ? -1 : 1) : new Date(b.createdAt) - new Date(a.createdAt)));
+  }, [openRequests, selectedCountry, selectedCity, selectedZone, selectedCategory, selectedSubcategory, onlySos, searchQuery, lang]);
+
   /* ------------------------------ Finestre ------------------------------ */
   const [activeListingId, setActiveListingId] = useState(sharedAdId);
+  const [activeRequestId, setActiveRequestId] = useState(sharedRequestId);
+  const [showPublishRequest, setShowPublishRequest] = useState(false);
   useEffect(() => {
-    if (sharedAdId) window.history.replaceState(null, '', window.location.pathname);
+    if (sharedAdId || sharedRequestId || startParams.get('view')) window.history.replaceState(null, '', window.location.pathname);
   }, []);
+  const activeRequest = useMemo(() => dbRequests.find((r) => r.id === activeRequestId) || null, [dbRequests, activeRequestId]);
   const [showAuth, setShowAuth] = useState(false);
   const [authNext, setAuthNext] = useState(null);
   const [showTerms, setShowTerms] = useState(false);
@@ -342,6 +394,7 @@ export default function App() {
     if (!ownerId || !window.confirm(t.blockConfirm)) return;
     setBlocked((prev) => (prev.includes(ownerId) ? prev : [...prev, ownerId]));
     setActiveListingId(null);
+    setActiveRequestId(null);
     showToast(t.userBlocked);
   };
 
@@ -352,6 +405,7 @@ export default function App() {
       setShowProfile(false);
       setSession(null);
       await reload();
+      await reloadRequests();
       showToast(t.accountDeleted);
     } catch {
       showToast(t.actionError, 'error');
@@ -472,6 +526,62 @@ export default function App() {
       if (activeListingId === id) setActiveListingId(null);
       await reload();
       showToast(t.adDeleted);
+    } catch {
+      showToast(t.actionError, 'error');
+    }
+  };
+
+  /* ------------------------------ Richieste: azioni ------------------------------ */
+  const openPublishRequest = () => requireAuth(() => { setShowProfile(false); setShowPublishRequest(true); });
+
+  const openRequest = (id) => {
+    trackAdAction();
+    setShowProfile(false);
+    setActiveRequestId(id);
+  };
+
+  const publishRequest = async (form) => {
+    try {
+      const id = await api.createRequest(form);
+      await reloadRequests();
+      setShowPublishRequest(false);
+      resetAllFilters();
+      setSelectedCountry(form.country);
+      setView('requests');
+      setActiveRequestId(id);
+      showToast(t.reqPublished);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const closeRequest = async (id) => {
+    try {
+      await api.closeRequest(id);
+      await reloadRequests();
+      showToast(t.reqClosed);
+    } catch {
+      showToast(t.actionError, 'error');
+    }
+  };
+
+  const deleteRequest = async (id) => {
+    if (!window.confirm(t.reqDeleteConfirm)) return;
+    try {
+      await api.deleteRequest(id);
+      if (activeRequestId === id) setActiveRequestId(null);
+      await reloadRequests();
+      showToast(t.reqDeleted);
+    } catch {
+      showToast(t.actionError, 'error');
+    }
+  };
+
+  const reportRequest = async (requestId) => {
+    try {
+      await api.report({ requestId });
+      showToast(t.reportSent);
     } catch {
       showToast(t.actionError, 'error');
     }
@@ -764,10 +874,41 @@ export default function App() {
           </div>
         )}
 
+        {/* Professionisti | Richieste dei clienti */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+          <div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-slate-200/70 w-full sm:w-auto" role="tablist">
+            {[
+              ['pros', t.reqTabPros, filteredListings.length],
+              ['requests', t.reqTabRequests, filteredRequests.length],
+            ].map(([v, label, n]) => (
+              <button
+                key={v}
+                type="button"
+                role="tab"
+                aria-selected={view === v}
+                onClick={() => { setView(v); trackAdAction(); }}
+                className={`px-4 py-2 rounded-xl text-sm font-extrabold transition flex items-center justify-center gap-2 ${view === v ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+              >
+                {label}
+                <span className={`px-1.5 py-0.5 rounded-md text-[11px] ${view === v ? 'bg-blue-600 text-white' : 'bg-slate-300/70 text-slate-700'}`}>{n}</span>
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={openPublishRequest}
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-sm"
+          >
+            <Megaphone className="w-4 h-4" /> {t.reqPublishBtn}
+          </button>
+        </div>
+
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div className="flex items-center gap-2 flex-wrap">
             <h2 className="text-lg font-extrabold text-slate-900" aria-live="polite">
-              {loadState === 'loading' ? t.loading : `${filteredListings.length} ${filteredListings.length === 1 ? t.resultsCountOne : t.resultsCount}`}
+              {view === 'requests'
+                ? `${filteredRequests.length} ${filteredRequests.length === 1 ? t.reqCountOne : t.reqCount}`
+                : loadState === 'loading' ? t.loading : `${filteredListings.length} ${filteredListings.length === 1 ? t.resultsCountOne : t.resultsCount}`}
             </h2>
             {hasFilters && (
               <button type="button" onClick={resetAllFilters} className="text-xs font-semibold text-blue-600 hover:text-blue-800 underline ml-2">{t.resetFilters}</button>
@@ -837,7 +978,30 @@ export default function App() {
           </div>
         )}
 
-        {loadState === 'error' && isSupabaseConfigured && (
+        {view === 'requests' && (
+          <>
+            <p className="mb-5 -mt-2 text-xs sm:text-sm font-semibold text-blue-900 bg-blue-50 border border-blue-200 rounded-xl px-3.5 py-2.5">🛠️ {t.reqForPros}</p>
+            {filteredRequests.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center max-w-xl mx-auto my-6 shadow-sm">
+                <Megaphone className="w-10 h-10 text-blue-500 mx-auto mb-3" />
+                <h3 className="font-extrabold text-slate-900 mb-1">{t.reqEmptyTitle}</h3>
+                <p className="text-sm text-slate-600 mb-5">{t.reqEmptyText}</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <button type="button" onClick={openPublishRequest} className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm">{t.reqPublishBtn}</button>
+                  {hasFilters && <button type="button" onClick={resetAllFilters} className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-sm">{t.resetFilters}</button>}
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredRequests.map((r) => (
+                  <RequestCard key={r.id} request={r} lang={lang} t={t} isMine={!!currentUser && r.ownerId === currentUser.id} onOpen={openRequest} />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {view === 'pros' && loadState === 'error' && isSupabaseConfigured && (
           <div className="bg-white rounded-2xl border border-rose-200 p-8 text-center max-w-xl mx-auto my-6 shadow-sm">
             <AlertTriangle className="w-10 h-10 text-rose-500 mx-auto mb-3" />
             <p className="text-sm text-slate-700 mb-4">{t.loadError}</p>
@@ -845,13 +1009,13 @@ export default function App() {
           </div>
         )}
 
-        {loadState === 'loading' && (
+        {view === 'pros' && loadState === 'loading' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-hidden="true">
             {[0, 1, 2].map((i) => <div key={i} className="h-80 rounded-2xl bg-slate-200/70 animate-pulse" />)}
           </div>
         )}
 
-        {loadState === 'ok' && (filteredListings.length === 0 ? (
+        {view === 'pros' && loadState === 'ok' && (filteredListings.length === 0 ? (
           <EmptyState
             t={t}
             lang={lang}
@@ -878,6 +1042,12 @@ export default function App() {
             ))}
           </div>
         ))}
+
+        {view === 'pros' && loadState === 'ok' && (
+          <div className="mt-8">
+            <RequestCta t={t} onPublish={openPublishRequest} compact />
+          </div>
+        )}
 
         <section className="mt-12 bg-amber-50/90 border border-amber-200 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-start gap-3.5">
@@ -938,6 +1108,38 @@ export default function App() {
         />
       )}
 
+      {activeRequest && (
+        <RequestModal
+          key={activeRequest.id}
+          request={activeRequest}
+          lang={lang}
+          t={t}
+          currentUser={currentUser}
+          loadContact={api.fetchRequestContact}
+          onClose={() => setActiveRequestId(null)}
+          onLogin={() => setShowAuth(true)}
+          onReport={reportRequest}
+          onBlockUser={blockUser}
+          onCloseRequest={closeRequest}
+          onDelete={deleteRequest}
+        />
+      )}
+
+      {/* ?shotreq (solo in sviluppo) apre il modulo senza account, per screenshot e prove grafiche */}
+      {((showPublishRequest && currentUser) || (import.meta.env.DEV && startParams.has('shotreq'))) && (
+        <PublishRequestModal
+          lang={lang}
+          t={t}
+          user={currentUser || { name: '', country: 'IT' }}
+          defaultCountry={selectedCountry}
+          defaultCity={selectedCity}
+          defaultCategory={selectedCategory}
+          onClose={() => setShowPublishRequest(false)}
+          onShowTerms={() => setShowTerms(true)}
+          onPublish={publishRequest}
+        />
+      )}
+
       {showAuth && (
         <AuthModal
           lang={lang}
@@ -994,6 +1196,9 @@ export default function App() {
           onDeleteAd={deleteAd}
           onQrCard={openQrCard}
           onDeleteAccount={deleteAccount}
+          myRequests={dbRequests.filter((r) => r.ownerId === currentUser.id)}
+          onOpenRequest={openRequest}
+          onPublishRequest={openPublishRequest}
         />
       )}
 

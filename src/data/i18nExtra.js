@@ -616,6 +616,10 @@ export const LEGAL_EXTRA = {
       title: '7. Diritti dei consumatori e legge applicabile',
       body: 'Nulla in queste Condizioni limita i diritti inderogabili che la legge del tuo Paese ti riconosce come consumatore, né la responsabilità che non può essere esclusa per legge (ad esempio per dolo o colpa grave). Il professionista resta l’unico responsabile verso il cliente delle prestazioni che esegue.',
     },
+    {
+      title: '8. Richieste dei clienti',
+      body: 'Chi pubblica una richiesta (es. “Cerco un idraulico”) rende pubblici il testo, la città, la categoria e il nome abbreviato; il numero di telefono è visibile solo agli utenti registrati finché la richiesta è aperta. Le richieste scadono dopo 30 giorni e si possono chiudere o eliminare in ogni momento. È vietato pubblicare dati personali di terzi, contenuti offensivi, pubblicità o richieste per attività illecite: le richieste segnalate possono essere rimosse. SOSPro24 non verifica le richieste né garantisce che qualcuno risponda.',
+    },
   ],
   en: [
     {
@@ -629,6 +633,10 @@ export const LEGAL_EXTRA = {
     {
       title: '7. Consumer rights & governing law',
       body: 'Nothing in these Terms limits the mandatory consumer rights granted by the law of your country, or any liability that cannot be excluded by law (for example for wilful misconduct or gross negligence). The professional remains solely responsible to the client for the services they perform.',
+    },
+    {
+      title: '8. Customer requests',
+      body: 'When you post a request (e.g. “Looking for a plumber”), the text, city, category and your short name become public; your phone number is visible only to registered users while the request is open. Requests expire after 30 days and can be closed or deleted at any time. You must not post third parties’ personal data, offensive content, advertising or requests for illegal activities: reported requests may be removed. SOSPro24 does not check requests or guarantee that anyone will reply.',
     },
   ],
   fr: [
@@ -644,6 +652,10 @@ export const LEGAL_EXTRA = {
       title: '7. Droits des consommateurs et droit applicable',
       body: 'Aucune stipulation de ces Conditions ne limite les droits impératifs que la loi de votre pays vous reconnaît en tant que consommateur, ni la responsabilité qui ne peut être exclue par la loi. La professionnelle reste seule responsable envers le client des prestations qu’elle réalise.',
     },
+    {
+      title: '8. Demandes des clients',
+      body: 'Quand tu publies une demande (ex. « Je cherche un plombier »), le texte, la ville, la catégorie et ton nom abrégé deviennent publics ; ton numéro n’est visible que par les utilisateurs inscrits tant que la demande est ouverte. Les demandes expirent après 30 jours et peuvent être fermées ou supprimées à tout moment. Il est interdit de publier des données personnelles de tiers, des contenus offensants, de la publicité ou des demandes pour des activités illicites : les demandes signalées peuvent être supprimées. SOSPro24 ne vérifie pas les demandes et ne garantit pas que quelqu’un réponde.',
+    },
   ],
   es: [
     {
@@ -658,6 +670,10 @@ export const LEGAL_EXTRA = {
       title: '7. Derechos de los consumidores y ley aplicable',
       body: 'Nada en estas Condiciones limita los derechos irrenunciables que la ley de tu país te reconoce como consumidor, ni la responsabilidad que no pueda excluirse legalmente. La profesional es la única responsable ante el cliente de los servicios que presta.',
     },
+    {
+      title: '8. Solicitudes de los clientes',
+      body: 'Al publicar una solicitud (p. ej. «Busco fontanero»), el texto, la ciudad, la categoría y tu nombre abreviado pasan a ser públicos; tu número solo lo ven los usuarios registrados mientras la solicitud está abierta. Las solicitudes caducan a los 30 días y se pueden cerrar o eliminar en cualquier momento. Está prohibido publicar datos personales de terceros, contenidos ofensivos, publicidad o solicitudes para actividades ilícitas: las solicitudes denunciadas pueden eliminarse. SOSPro24 no verifica las solicitudes ni garantiza que alguien responda.',
+    },
   ],
   de: [
     {
@@ -671,6 +687,10 @@ export const LEGAL_EXTRA = {
     {
       title: '7. Verbraucherrechte & anwendbares Recht',
       body: 'Nichts in diesen Bedingungen schränkt zwingende Verbraucherrechte nach dem Recht Ihres Landes ein, ebenso wenig eine gesetzlich nicht ausschließbare Haftung (z. B. bei Vorsatz oder grober Fahrlässigkeit). Die Fachkraft bleibt gegenüber dem Kunden allein für ihre Leistungen verantwortlich.',
+    },
+    {
+      title: '8. Gesuche von Kunden',
+      body: 'Wer ein Gesuch aufgibt (z. B. „Suche Klempner“), macht Text, Stadt, Kategorie und den abgekürzten Namen öffentlich; die Telefonnummer sehen nur registrierte Nutzer, solange das Gesuch offen ist. Gesuche enden nach 30 Tagen und können jederzeit geschlossen oder gelöscht werden. Verboten sind personenbezogene Daten Dritter, beleidigende Inhalte, Werbung und Gesuche für rechtswidrige Tätigkeiten: Gemeldete Gesuche können entfernt werden. SOSPro24 prüft Gesuche nicht und garantiert nicht, dass jemand antwortet.',
     },
   ],
 };

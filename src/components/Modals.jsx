@@ -501,7 +501,10 @@ export function SmartMatchModal({ lang, t, listings, defaultCountry, onClose, on
 }
 
 /* ============================ PROFILO UTENTE ============================ */
-export function ProfileModal({ lang, t, user, listings, favorites, onClose, onOpen, onPublish, onToggleRole, onLogout, onDeleteAd, onQrCard, onDeleteAccount }) {
+export function ProfileModal({
+  lang, t, user, listings, favorites, onClose, onOpen, onPublish, onToggleRole, onLogout, onDeleteAd, onQrCard, onDeleteAccount,
+  myRequests = [], onOpenRequest, onPublishRequest,
+}) {
   const favs = listings.filter((l) => favorites.includes(l.id));
   const mine = listings.filter((l) => l.ownerId === user.id);
 
@@ -547,6 +550,32 @@ export function ProfileModal({ lang, t, user, listings, favorites, onClose, onOp
                     </button>
                   </span>
                 </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">{t.reqMine} ({myRequests.length})</h4>
+            <button type="button" onClick={onPublishRequest} className="text-xs font-bold text-blue-600 hover:underline">+ {t.reqPublishBtn}</button>
+          </div>
+          {myRequests.length === 0 ? (
+            <p className="text-xs text-slate-500">{t.reqNoMine}</p>
+          ) : (
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {myRequests.map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => onOpenRequest(r.id)}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 flex items-center justify-between gap-2 text-xs text-left hover:border-blue-400"
+                >
+                  <span className="font-bold text-slate-800 truncate">{r.body}</span>
+                  <span className={`shrink-0 px-2 py-0.5 rounded-full font-bold ${r.status === 'active' && new Date(r.expiresAt) > new Date() ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                    {r.status === 'active' && new Date(r.expiresAt) > new Date() ? r.city : t.reqClosedBadge}
+                  </span>
+                </button>
               ))}
             </div>
           )}

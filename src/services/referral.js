@@ -3,7 +3,7 @@
 import { Capacitor } from '@capacitor/core';
 import { configureReferral, getReferralState, canEnterCode } from './referral-core.js';
 
-export const APP_VERSION = '1.0.0';
+export const APP_VERSION = '1.1.0';
 
 configureReferral({
   api: 'https://partner.ikonetsolutions.com',

@@ -348,3 +348,124 @@ $$;
 
 revoke all on function public.delete_my_account() from public, anon;
 grant execute on function public.delete_my_account() to authenticated;
+
+-- ============================================================================
+-- RICHIESTE DEI CLIENTI (es. "Cerco un idraulico zona Piacenza")
+-- Bacheca pubblica: testo, città, categoria e nome abbreviato sono visibili a tutti;
+-- il telefono sta in request_contacts ed è visibile solo agli utenti registrati
+-- finché la richiesta è attiva. Scadono da sole dopo 30 giorni.
+-- ============================================================================
+create table if not exists public.requests (
+  id             uuid primary key default gen_random_uuid(),
+  owner_id       uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  author_name    text not null default '',
+  country        text not null check (char_length(country) between 2 and 3),
+  city           text not null check (char_length(city) between 1 and 80),
+  zone           text not null default '' check (char_length(zone) <= 80),
+  category_id    text not null check (char_length(category_id) <= 40),
+  subcategory_id text not null check (char_length(subcategory_id) <= 40),
+  body           text not null check (char_length(body) between 10 and 500),
+  urgent         boolean not null default false,
+  status         text not null default 'active' check (status in ('active', 'closed', 'removed')),
+  created_at     timestamptz not null default now(),
+  expires_at     timestamptz not null default (now() + interval '30 days')
+);
+
+create index if not exists requests_place_idx on public.requests (country, city) where status = 'active';
+create index if not exists requests_owner_idx on public.requests (owner_id);
+
+alter table public.requests enable row level security;
+
+drop policy if exists "requests: read active or own" on public.requests;
+create policy "requests: read active or own" on public.requests
+  for select using ((status = 'active' and expires_at > now()) or owner_id = auth.uid());
+
+-- Massimo 3 richieste attive e 5 nuove al giorno per utente
+drop policy if exists "requests: owner insert" on public.requests;
+create policy "requests: owner insert" on public.requests
+  for insert to authenticated
+  with check (
+    owner_id = auth.uid()
+    and status = 'active'
+    and (select count(*) from public.requests r
+          where r.owner_id = auth.uid() and r.status = 'active' and r.expires_at > now()) < 3
+    and (select count(*) from public.requests r
+          where r.owner_id = auth.uid() and r.created_at > now() - interval '1 day') < 5
+  );
+
+-- Il proprietario può solo chiudere la richiesta (risolta); "removed" lo mette l'amministratore
+drop policy if exists "requests: owner close" on public.requests;
+create policy "requests: owner close" on public.requests
+  for update to authenticated
+  using (owner_id = auth.uid() and status <> 'removed')
+  with check (owner_id = auth.uid() and status = 'closed');
+
+drop policy if exists "requests: owner delete" on public.requests;
+create policy "requests: owner delete" on public.requests
+  for delete to authenticated using (owner_id = auth.uid());
+
+-- Nome pubblico preso dal profilo ("Maria Rossi" -> "Maria R."), date e stato decisi dal server
+create or replace function public.set_request_author()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  p_name text;
+  parts  text[];
+begin
+  select name into p_name from public.profiles where id = auth.uid();
+  parts := regexp_split_to_array(trim(coalesce(p_name, 'Utente')), '\s+');
+  new.owner_id    := auth.uid();
+  new.author_name := left(parts[1], 30)
+                     || case when array_length(parts, 1) > 1
+                             then ' ' || upper(left(parts[array_length(parts, 1)], 1)) || '.'
+                             else '' end;
+  new.status      := 'active';
+  new.created_at  := now();
+  new.expires_at  := now() + interval '30 days';
+  return new;
+end;
+$$;
+
+drop trigger if exists requests_set_author on public.requests;
+create trigger requests_set_author
+  before insert on public.requests
+  for each row execute function public.set_request_author();
+
+create table if not exists public.request_contacts (
+  request_id uuid primary key references public.requests (id) on delete cascade,
+  phone      text not null check (phone ~ '^\+?[0-9 ().-]{8,22}$')
+);
+
+alter table public.request_contacts enable row level security;
+
+drop policy if exists "request contacts: read signed-in while active" on public.request_contacts;
+create policy "request contacts: read signed-in while active" on public.request_contacts
+  for select to authenticated
+  using (exists (
+    select 1 from public.requests r
+    where r.id = request_id
+      and ((r.status = 'active' and r.expires_at > now()) or r.owner_id = auth.uid())
+  ));
+
+drop policy if exists "request contacts: owner insert" on public.request_contacts;
+create policy "request contacts: owner insert" on public.request_contacts
+  for insert to authenticated
+  with check (exists (select 1 from public.requests r where r.id = request_id and r.owner_id = auth.uid()));
+
+-- Le richieste si possono segnalare come annunci e recensioni
+alter table public.reports add column if not exists request_id uuid references public.requests (id) on delete cascade;
+alter table public.reports drop constraint if exists reports_check;
+alter table public.reports drop constraint if exists reports_target_check;
+alter table public.reports add constraint reports_target_check
+  check (listing_id is not null or review_id is not null or request_id is not null);
+
+revoke all on public.requests, public.request_contacts from anon, authenticated;
+grant select on public.requests to anon, authenticated;
+grant insert (country, city, zone, category_id, subcategory_id, body, urgent) on public.requests to authenticated;
+grant update (status) on public.requests to authenticated;
+grant delete on public.requests to authenticated;
+grant select, insert on public.request_contacts to authenticated;
+revoke execute on function public.set_request_author() from public, anon, authenticated;
