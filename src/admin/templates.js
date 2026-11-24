@@ -7,6 +7,25 @@
 export const APP_IOS = 'https://apps.apple.com/app/id6836977205';
 export const APP_ANDROID = ''; // es. 'https://play.google.com/store/apps/details?id=com.ikonet.sospro24'
 
+// Contatti mostrati nella firma di ogni email (telefono e WhatsApp, link wa.me cliccabile)
+export const PHONE = '+39 329 618 5600';
+export const WHATSAPP = 'https://wa.me/393296185600';
+
+const signature = {
+  it: `Ikonet Solutions
+SOSPro24
+📞 Telefono e WhatsApp: ${PHONE}
+💬 Scrivici su WhatsApp: ${WHATSAPP}`,
+  fr: `Ikonet Solutions
+SOSPro24
+📞 Téléphone et WhatsApp : ${PHONE}
+💬 Écrivez-nous sur WhatsApp : ${WHATSAPP}`,
+  en: `Ikonet Solutions
+SOSPro24
+📞 Phone & WhatsApp: ${PHONE}
+💬 Message us on WhatsApp: ${WHATSAPP}`,
+};
+
 const appLines = {
   it: `📱 Scaricate l'app SOSPro24:
 - iPhone: ${APP_IOS}
@@ -44,8 +63,7 @@ Se vi interessa, posso creare io il profilo in pochi minuti: mi basta una rispos
 Se non vi interessa, basta ignorare questa email: non vi scriverò di nuovo.
 
 Grazie e buon lavoro,
-Inza Kone
-SOSPro24`,
+${signature.it}`,
       },
       fr: {
         subject: 'Une annonce gratuite sur SOSPro24 pour {nome}',
@@ -66,8 +84,7 @@ Si cela vous intéresse, je peux créer votre profil en quelques minutes : il me
 Sinon, ignorez simplement cet e-mail : je ne vous écrirai plus.
 
 Merci et bonne journée,
-Inza Kone
-SOSPro24`,
+${signature.fr}`,
       },
       en: {
         subject: 'A free listing on SOSPro24 for {nome}',
@@ -88,8 +105,7 @@ If you're interested, I can set up your profile in a few minutes: just reply wit
 If not, simply ignore this email: I won't write again.
 
 Thank you,
-Inza Kone
-SOSPro24`,
+${signature.en}`,
       },
     },
   },
@@ -109,8 +125,7 @@ I clienti di {citta} che cercano {categoria} possono trovarvi e contattarvi dire
 ${appLines.it}
 
 Grazie,
-Inza Kone
-SOSPro24`,
+${signature.it}`,
       },
     },
   },
@@ -129,7 +144,8 @@ Motivo: [scrivi qui il motivo]
 
 Se pensi che sia un errore rispondi a questa email. In caso di nuove violazioni l'account potrà essere sospeso.
 
-Il team di SOSPro24`,
+Il team di SOSPro24
+📞 Telefono e WhatsApp: ${PHONE}`,
       },
     },
   },
@@ -137,7 +153,7 @@ Il team di SOSPro24`,
     id: 'free',
     label: 'Testo libero',
     forContacts: false,
-    text: { it: { subject: '', body: 'Ciao {nome},\n\n\n\nGrazie,\nInza Kone\nSOSPro24' } },
+    text: { it: { subject: '', body: `Ciao {nome},\n\n\n\nGrazie,\n${signature.it}` } },
   },
 ];
 
