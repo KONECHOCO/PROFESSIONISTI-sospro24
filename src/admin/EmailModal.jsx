@@ -16,17 +16,24 @@ export default function EmailModal({ recipients, defaultTemplate = 'free', onClo
   const startTpl = choices.find((t) => t.id === defaultTemplate) || choices[0];
   const startLang = recipients[0]?.lang && startTpl.text[recipients[0].lang] ? recipients[0].lang : 'it';
 
-  const [tpl, setTpl] = useState(startTpl.id);
-  const [lang, setLang] = useState(startLang);
-  const variant = (id, l) => { const t = TEMPLATES.find((x) => x.id === id); return t.text[l] || t.text.it; };
-  const [subject, setSubject] = useState(variant(startTpl.id, startLang).subject);
-  const [body, setBody] = useState(variant(startTpl.id, startLang).body);
-  const [busy, setBusy] = useState(false);
-  const [results, setResults] = useState([]); // { email, ok, error }
-
   const valid = recipients.filter((r) => r.email && !r.optedOut);
   const skipped = recipients.length - valid.length;
   const preview = valid[0] || recipients[0] || {};
+  // Un solo destinatario: il testo compare già completo con i suoi dati (nome, categoria, città).
+  // Più destinatari: restano {nome} {categoria} {citta}, completati per ognuno al momento dell'invio.
+  const single = valid.length === 1;
+
+  const variant = (id, l) => {
+    const t = TEMPLATES.find((x) => x.id === id);
+    const v = t.text[l] || t.text.it;
+    return single ? { subject: fill(v.subject, valid[0]), body: fill(v.body, valid[0]) } : v;
+  };
+  const [tpl, setTpl] = useState(startTpl.id);
+  const [lang, setLang] = useState(startLang);
+  const [subject, setSubject] = useState(() => variant(startTpl.id, startLang).subject);
+  const [body, setBody] = useState(() => variant(startTpl.id, startLang).body);
+  const [busy, setBusy] = useState(false);
+  const [results, setResults] = useState([]); // { email, ok, error }
 
   const applyTemplate = (id, l) => {
     const v = variant(id, l);
@@ -84,16 +91,32 @@ export default function EmailModal({ recipients, defaultTemplate = 'free', onClo
           <Field label="Oggetto">
             <input className={inputCls} value={subject} onChange={(e) => setSubject(e.target.value)} disabled={busy} />
           </Field>
-          <Field label="Testo" hint="{nome}, {categoria} e {citta} vengono sostituiti per ogni destinatario. Chi siamo e il link per disiscriversi si aggiungono da soli in fondo.">
+          {single && (preview.nome || preview.categoria || preview.citta) && (
+            <p className="text-xs text-slate-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+              Dati presi dal contatto: <b>{preview.nome || '—'}</b> · {preview.categoria || 'categoria mancante'} · {preview.citta || 'città mancante'}
+              {(!preview.categoria || !preview.citta || !preview.nome) && <span className="text-amber-800"> — dove manca un dato compare "…": correggilo nel testo.</span>}
+            </p>
+          )}
+          <Field label="Testo" hint={single
+            ? 'Testo già completato con i dati del destinatario: puoi modificarlo liberamente. Chi siamo e il link per disiscriversi si aggiungono da soli in fondo.'
+            : '{nome}, {categoria} e {citta} vengono completati automaticamente per ogni destinatario. Chi siamo e il link per disiscriversi si aggiungono da soli in fondo.'}>
             <textarea className={`${inputCls} font-mono text-[13px]`} rows={14} value={body} onChange={(e) => setBody(e.target.value)} disabled={busy} />
           </Field>
-          <details className="text-sm">
-            <summary className="cursor-pointer font-semibold text-slate-700">Anteprima per {preview.nome || preview.email}</summary>
-            <div className="mt-2 p-3 rounded-lg bg-slate-50 border border-slate-200 whitespace-pre-wrap text-[13px]">
-              <div className="font-bold mb-2">{fill(subject, preview)}</div>
-              {fill(body, preview)}
-            </div>
-          </details>
+          {!single && (
+            <details className="text-sm">
+              <summary className="cursor-pointer font-semibold text-slate-700">Anteprima e dati di ogni destinatario</summary>
+              <ul className="mt-2 text-xs space-y-0.5 max-h-32 overflow-y-auto">
+                {valid.map((r) => (
+                  <li key={r.email}><b>{r.nome || '—'}</b> · {r.categoria || <span className="text-amber-700">categoria mancante</span>} · {r.citta || <span className="text-amber-700">città mancante</span>} · <span className="text-slate-500">{r.email}</span></li>
+                ))}
+              </ul>
+              <div className="mt-2 p-3 rounded-lg bg-slate-50 border border-slate-200 whitespace-pre-wrap text-[13px]">
+                <div className="text-[11px] text-slate-500 mb-1">Come la riceve {preview.nome || preview.email}:</div>
+                <div className="font-bold mb-2">{fill(subject, preview)}</div>
+                {fill(body, preview)}
+              </div>
+            </details>
+          )}
         </div>
       )}
 
