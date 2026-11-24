@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { BellRing, Briefcase, CheckCircle2 } from 'lucide-react';
+import { Briefcase, CheckCircle2, Megaphone } from 'lucide-react';
 import { joinWaitlist, waitlistCount } from '../lib/api';
 import { fmt, countryName, categoryName } from '../lib/utils';
 
-// Mostrata quando la ricerca non trova nessuno: invece di perdere il cliente,
-// lo mettiamo in lista d'attesa; alle professioniste chiediamo di essere le prime.
-export default function EmptyState({ t, lang, country, city, categoryId, hasFilters, onReset, onPublish }) {
+// Mostrata quando la ricerca non trova nessuno: invece di perdere il cliente gli proponiamo
+// di pubblicare una richiesta (o di lasciare l'email); ai professionisti chiediamo di essere i primi.
+export default function EmptyState({ t, lang, country, city, categoryId, hasFilters, onReset, onPublish, onPublishRequest }) {
   const [email, setEmail] = useState('');
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -53,14 +53,20 @@ export default function EmptyState({ t, lang, country, city, categoryId, hasFilt
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 my-4">
-      {/* Clienti: lista d'attesa */}
+      {/* Clienti: richiesta pubblica oppure lista d'attesa */}
       <section className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
         <div className="flex items-center gap-2.5 mb-2">
-          <div className="p-2 rounded-xl bg-blue-50 text-blue-600"><BellRing className="w-5 h-5" /></div>
+          <div className="p-2 rounded-xl bg-blue-50 text-blue-600"><Megaphone className="w-5 h-5" /></div>
           <h3 className="text-lg font-extrabold text-slate-900">{t.emptyTitle}</h3>
         </div>
         {where && <p className="text-xs font-bold text-blue-600 mb-2">{where}</p>}
         <p className="text-sm text-slate-600 mb-4">{t.emptyText}</p>
+        {onPublishRequest && (
+          <button type="button" onClick={onPublishRequest} className="w-full sm:w-auto px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow-sm">
+            {t.reqPublishBtn}
+          </button>
+        )}
+        <p className="mt-5 mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">{t.emptyOrNotify}</p>
         {waiting > 0 && (
           <p className="text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 mb-4">
             👥 {waiting === 1 ? t.waitlistWaitingOne : fmt(t.waitlistWaiting, { n: waiting })}

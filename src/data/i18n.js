@@ -122,9 +122,9 @@ export const CATEGORIES = [
       de: 'Personenbetreuung & Pflege',
     },
     subcategories: [
-      { id: 'babysitter', names: { it: 'Babysitter & Tata Qualificata', en: 'Certified Babysitter & Nanny', fr: 'Baby-sitter & Nounou', es: 'Niñera y Canguro', de: 'Babysitter & Kinderbetreuung' } },
+      { id: 'babysitter', names: { it: 'Babysitter & Tata', en: 'Certified Babysitter & Nanny', fr: 'Baby-sitter & Nounou', es: 'Niñera y Canguro', de: 'Babysitter & Kinderbetreuung' } },
       { id: 'eldercare', names: { it: 'Assistenza Anziani / Badante', en: 'Elderly Care & Companion', fr: 'Aide aux Personnes Âgées', es: 'Cuidado de Mayores', de: 'Seniorenbetreuung' } },
-      { id: 'nurse', names: { it: 'Infermiera / Fisioterapista a Domicilio', en: 'Home Nurse & Physio', fr: 'Infirmière / Kiné à Domicile', es: 'Enfermera / Fisio a Domicilio', de: 'Hauskrankenpflege & Physio' } },
+      { id: 'nurse', names: { it: 'Infermiera / Fisioterapista a Domicilio', en: 'Home Nurse & Physio', fr: 'Soins Infirmiers / Kiné à Domicile', es: 'Enfermera / Fisio a Domicilio', de: 'Hauskrankenpflege & Physio' } },
       { id: 'cleaning', names: { it: 'Pulizie Casa & Sanificazione', en: 'Home Cleaning & Sanitization', fr: 'Ménage & Nettoyage Pro', es: 'Limpieza y Desinfección', de: 'Haushaltsreinigung' } },
       { id: 'petsitter', names: { it: 'Pet Sitter & Dog Walker', en: 'Pet Sitter & Dog Walker', fr: 'Pet-sitter & Garde Animaux', es: 'Cuidador de Mascotas', de: 'Tiersitter & Gassigehen' } },
     ]
@@ -141,9 +141,9 @@ export const CATEGORIES = [
       de: 'Beauty, Wellness & Events',
     },
     subcategories: [
-      { id: 'hair_makeup', names: { it: 'Parrucchiera & Make-up a Domicilio', en: 'Mobile Hairstylist & Makeup', fr: 'Coiffeuse & Maquillage à Domicile', es: 'Peluquera y Maquillaje a Domicilio', de: 'Mobiler Friseur & Make-up' } },
-      { id: 'esthetics', names: { it: 'Estetista & Massaggi Benessere', en: 'Beautician & Wellness Massage', fr: 'Esthéticienne & Massages', es: 'Esteticista y Masajes', de: 'Kosmetik & Wellness-Massage' } },
-      { id: 'tailor', names: { it: 'Sarta & Riparazioni Sartoriali Express', en: 'Tailor & Express Alterations', fr: 'Couturière & Retouches Express', es: 'Modista y Arreglos Express', de: 'Schneiderei & Express-Änderungen' } },
+      { id: 'hair_makeup', names: { it: 'Parrucchiera & Make-up a Domicilio', en: 'Mobile Hairstylist & Makeup', fr: 'Coiffure & Maquillage à Domicile', es: 'Peluquera y Maquillaje a Domicilio', de: 'Mobiler Friseur & Make-up' } },
+      { id: 'esthetics', names: { it: 'Estetista & Massaggi Benessere', en: 'Beautician & Wellness Massage', fr: 'Esthétique & Massages', es: 'Esteticista y Masajes', de: 'Kosmetik & Wellness-Massage' } },
+      { id: 'tailor', names: { it: 'Sarta & Riparazioni Sartoriali Express', en: 'Tailor & Express Alterations', fr: 'Couture & Retouches Express', es: 'Modista y Arreglos Express', de: 'Schneiderei & Express-Änderungen' } },
       { id: 'chef', names: { it: 'Chef a Domicilio & Catering', en: 'Private Chef & Catering', fr: 'Chef à Domicile & Traiteur', es: 'Chef a Domicilio y Catering', de: 'Privatkoch & Catering' } },
       { id: 'photo', names: { it: 'Fotografa & Videomaker Eventi', en: 'Event Photographer & Video', fr: 'Photographe & Vidéaste', es: 'Fotógrafa y Vídeo de Eventos', de: 'Eventfotografie & Video' } },
     ]
@@ -162,7 +162,7 @@ export const CATEGORIES = [
     subcategories: [
       { id: 'it_repair', names: { it: 'SOS Tecnico PC, Reti & Smartphone', en: 'SOS PC, Network & Phone Repair', fr: 'Dépannage Informatique & Mobile', es: 'Técnico PC, Redes y Móvil', de: 'PC-, Netzwerk- & Smartphone-Hilfe' } },
       { id: 'web_software', names: { it: 'Siti Web, App & Gestionali', en: 'Websites, Apps & Business Software', fr: 'Sites Web, Applis & Logiciels de Gestion', es: 'Webs, Apps y Software de Gestión', de: 'Websites, Apps & Unternehmenssoftware' } },
-      { id: 'translator', names: { it: 'Traduttrice & Interprete Giurata', en: 'Translator & Interpreter', fr: 'Traductrice & Interprète', es: 'Traductora e Intérprete', de: 'Übersetzerin & Dolmetscherin' } },
+      { id: 'translator', names: { it: 'Traduzioni & Interprete Giurato', en: 'Translator & Interpreter', fr: 'Traduction & Interprétariat', es: 'Traductora e Intérprete', de: 'Übersetzung & Dolmetschen' } },
       { id: 'tutor', names: { it: 'Ripetizioni & Lezioni di Lingue', en: 'Private Tutor & Language Lessons', fr: 'Cours Particuliers & Langues', es: 'Clases Particulares e Idiomas', de: 'Nachhilfe & Sprachunterricht' } },
       { id: 'legal_tax', names: { it: 'Consulente Fiscale, Pratiche & CAF', en: 'Tax, Admin & Legal Advisor', fr: 'Conseiller Fiscal & Administratif', es: 'Asesoría Fiscal y Trámites', de: 'Steuer- & Behördenberatung' } },
     ]
@@ -170,21 +170,21 @@ export const CATEGORIES = [
 ];
 
 export const FEEDBACK_TAGS = {
-  it: ['Puntuale', 'Intervento Rapido', 'Prezzo Onesto', 'Molto Professionale', 'Super Consigliata', 'Emergenza Risolta'],
+  it: ['Puntuale', 'Intervento Rapido', 'Prezzo Onesto', 'Molto Professionale', 'Super Consigliato', 'Emergenza Risolta'],
   en: ['Punctual', 'Fast Response', 'Fair Price', 'Very Professional', 'Highly Recommended', 'Emergency Solved'],
-  fr: ['Ponctuelle', 'Intervention Rapide', 'Prix Honnête', 'Très Professionnelle', 'Fortement Recommandée', 'Urgence Résolue'],
-  es: ['Puntual', 'Intervención Rápida', 'Precio Justo', 'Muy Profesional', 'Super Recomendada', 'Urgencia Resuelta'],
+  fr: ['Ponctuel', 'Intervention Rapide', 'Prix Honnête', 'Très Professionnel', 'Fortement Recommandé', 'Urgence Résolue'],
+  es: ['Puntual', 'Intervención Rápida', 'Precio Justo', 'Muy Profesional', 'Super Recomendado', 'Urgencia Resuelta'],
   de: ['Pünktlich', 'Schnelle Hilfe', 'Fairer Preis', 'Sehr Professionell', 'Sehr Empfehlenswert', 'Notfall Gelöst']
 };
 
 export const UI_TEXT = {
   it: {
-    brandSubtitle: 'Pronto Intervento & Professioniste nel Mondo',
+    brandSubtitle: 'Pronto Intervento & Professionisti nel Mondo',
     intermediaryNoticeShort: 'Piattaforma intermediaria neutrale: gli accordi e le prestazioni avvengono direttamente tra utente e professionista.',
     readTerms: 'Condizioni di Utilizzo',
     heroBadge: '🌍 6 Paesi • Nessuna commissione di intermediazione',
-    heroTitle: 'Trova subito la professionista giusta nella tua zona, anche in emergenza 24/7',
-    heroSubtitle: 'Cerca piccoli annunci professionali per paese, città, quartiere e categoria. Contatto diretto con la professionista, tariffe indicate da lei e feedback della community.',
+    heroTitle: 'Trova subito il professionista giusto nella tua zona, anche in emergenza 24/7',
+    heroSubtitle: 'Idraulici, elettricisti, fabbri, assistenza informatica, pulizie, babysitter e molti altri servizi per paese, città e quartiere. Contatti direttamente il professionista, senza commissioni sulla prestazione.',
     searchPlaceholder: 'Cerca servizio, competenza o nome (es. idraulico, sarta, babysitter, elettricista)...',
     countryLabel: 'Paese',
     cityLabel: 'Città',
@@ -208,7 +208,7 @@ export const UI_TEXT = {
     resultsCountOne: 'professionista trovato',
     resetFilters: 'Azzera filtri',
     availableNowBadge: 'SOS DISPONIBILE ORA',
-    verifiedBadge: 'Verificata',
+    verifiedBadge: 'Identità verificata',
     responseTimePrefix: 'Risponde in',
     fromPrice: 'Da',
     perHour: '/ora',
@@ -222,7 +222,7 @@ export const UI_TEXT = {
     experienceLabel: 'Esperienza:',
     years: 'anni',
     memberRequiredTitle: 'Registrazione richiesta per interagire',
-    memberRequiredDesc: 'Per garantire sicurezza e qualità, gli utenti e le professioniste devono registrarsi ed accettare le Condizioni di Utilizzo per contattare, lasciare feedback o pubblicare annunci.',
+    memberRequiredDesc: 'Per garantire sicurezza e qualità, utenti e professionisti devono registrarsi ed accettare le Condizioni di Utilizzo per contattare, lasciare feedback o pubblicare annunci.',
     quickDemoClient: 'Accesso Rapido Demo: Cliente',
     quickDemoPro: 'Accesso Rapido Demo: Professionista',
     roleClient: 'Utente / Cliente',
@@ -230,7 +230,7 @@ export const UI_TEXT = {
     leaveFeedbackTitle: 'Lascia un Feedback e Commento',
     yourRating: 'La tua valutazione:',
     selectTags: 'Punti di forza riscontrati:',
-    commentPlaceholder: 'Racconta la tua esperienza con questa professionista (puntualità, qualità, costi)...',
+    commentPlaceholder: 'Racconta la tua esperienza con questo professionista (puntualità, qualità, costi)...',
     submitReviewBtn: 'Pubblica Feedback',
     helpfulBtn: 'Utile',
     reportAdBtn: 'Segnala annuncio',
@@ -251,7 +251,7 @@ export const UI_TEXT = {
     sosAvailableCheck: 'Sono disponibile per Pronto Intervento SOS / Urgenze 24/7',
     publishSubmitBtn: 'Pubblica Annuncio sulla Piattaforma',
     smartMatchTitle: '⚡ Assistente SOS Pronto Intervento',
-    smartMatchSubtitle: 'Seleziona il tipo di urgenza e il tuo Paese: ti mostriamo in 3 secondi le professioniste pronte ad intervenire subito.',
+    smartMatchSubtitle: 'Seleziona il tipo di urgenza e il tuo Paese: ti mostriamo in 3 secondi i professionisti pronti a intervenire subito.',
     footerCopy: '© 2026 SOSPro24 Global Directory — Piattaforma Internazionale di Annunci Professionali e Pronto Intervento.',
   },
   en: {
@@ -260,7 +260,7 @@ export const UI_TEXT = {
     readTerms: 'Terms of Use',
     heroBadge: '🌍 6 Countries • No intermediary commission',
     heroTitle: 'Find the right professional in your area right away, including 24/7 emergencies',
-    heroSubtitle: 'Search professional micro-ads by country, city, district and category. Direct contact with the professional, rates set by her and community feedback.',
+    heroSubtitle: 'Plumbers, electricians, locksmiths, IT support, cleaning, babysitters and many more services by country, city and district. Contact the professional directly, with no commission on the job.',
     searchPlaceholder: 'Search service, skill, or name (e.g., plumber, tailor, babysitter, electrician)...',
     countryLabel: 'Country',
     cityLabel: 'City',
@@ -284,7 +284,7 @@ export const UI_TEXT = {
     resultsCountOne: 'professional found',
     resetFilters: 'Reset filters',
     availableNowBadge: 'SOS AVAILABLE NOW',
-    verifiedBadge: 'Verified',
+    verifiedBadge: 'ID verified',
     responseTimePrefix: 'Replies in',
     fromPrice: 'From',
     perHour: '/hr',
@@ -331,12 +331,12 @@ export const UI_TEXT = {
     footerCopy: '© 2026 SOSPro24 Global Directory — International Classifieds & Emergency Services Platform.',
   },
   fr: {
-    brandSubtitle: 'Dépannage d’Urgence & Professionnelles dans le Monde',
-    intermediaryNoticeShort: 'Plateforme intermédiaire neutre : les accords et prestations se font directement entre utilisatrice et professionnelle.',
+    brandSubtitle: 'Dépannage d’Urgence & Professionnels dans le Monde',
+    intermediaryNoticeShort: 'Plateforme intermédiaire neutre : les accords et prestations se font directement entre client et professionnel.',
     readTerms: 'Conditions d’Utilisation',
     heroBadge: '🌍 6 Pays • Aucune commission d’intermédiation',
-    heroTitle: 'Trouvez immédiatement la professionnelle qu’il vous faut dans votre quartier, 24h/24 et 7j/7',
-    heroSubtitle: 'Recherchez des petites annonces professionnelles par pays, ville, quartier et catégorie. Contact direct, tarifs fixés par la professionnelle et avis de la communauté.',
+    heroTitle: 'Trouvez immédiatement le professionnel qu’il vous faut dans votre quartier, 24h/24 et 7j/7',
+    heroSubtitle: 'Plombiers, électriciens, serruriers, dépannage informatique, ménage, baby-sitters et bien d’autres services par pays, ville et quartier. Contactez directement le professionnel, sans commission sur la prestation.',
     searchPlaceholder: 'Rechercher un service, métier ou nom (ex. plombier, couturière, baby-sitter)...',
     countryLabel: 'Pays',
     cityLabel: 'Ville',
@@ -360,7 +360,7 @@ export const UI_TEXT = {
     resultsCountOne: 'professionnel trouvé',
     resetFilters: 'Réinitialiser',
     availableNowBadge: 'SOS DISPO MAINTENANT',
-    verifiedBadge: 'Vérifiée',
+    verifiedBadge: 'Identité vérifiée',
     responseTimePrefix: 'Répond en',
     fromPrice: 'Dès',
     perHour: '/h',
@@ -374,15 +374,15 @@ export const UI_TEXT = {
     experienceLabel: 'Expérience :',
     years: 'ans',
     memberRequiredTitle: 'Inscription requise pour interagir',
-    memberRequiredDesc: 'Pour garantir la sécurité, les utilisateurs et professionnelles doivent s’inscrire et accepter les Conditions d’Utilisation pour contacter, commenter ou publier.',
+    memberRequiredDesc: 'Pour garantir la sécurité, les utilisateurs et professionnels doivent s’inscrire et accepter les Conditions d’Utilisation pour contacter, commenter ou publier.',
     quickDemoClient: 'Démo Rapide : Cliente',
-    quickDemoPro: 'Démo Rapide : Professionnelle',
-    roleClient: 'Utilisatrice / Cliente',
-    rolePro: 'Professionnelle',
+    quickDemoPro: 'Démo Rapide : Professionnel',
+    roleClient: 'Utilisateur / Client',
+    rolePro: 'Professionnel',
     leaveFeedbackTitle: 'Laisser un Avis et Commentaire',
     yourRating: 'Votre note :',
     selectTags: 'Points forts :',
-    commentPlaceholder: 'Partagez votre expérience avec cette professionnelle (ponctualité, qualité, tarif)...',
+    commentPlaceholder: 'Partagez votre expérience avec ce professionnel (ponctualité, qualité, tarif)...',
     submitReviewBtn: 'Publier l’Avis',
     helpfulBtn: 'Utile',
     reportAdBtn: 'Signaler',
@@ -403,7 +403,7 @@ export const UI_TEXT = {
     sosAvailableCheck: 'Je suis disponible pour les dépannages d’urgence SOS 24/7',
     publishSubmitBtn: 'Publier l’Annonce',
     smartMatchTitle: '⚡ Assistant SOS Dépannage Rapide',
-    smartMatchSubtitle: 'Sélectionnez votre urgence et votre pays : voici les professionnelles disponibles immédiatement.',
+    smartMatchSubtitle: 'Sélectionnez votre urgence et votre pays : voici les professionnels disponibles immédiatement.',
     footerCopy: '© 2026 SOSPro24 Global Directory — Plateforme Internationale de Petites Annonces et Dépannage.',
   },
   es: {
@@ -411,8 +411,8 @@ export const UI_TEXT = {
     intermediaryNoticeShort: 'Plataforma intermediaria neutral: los acuerdos y servicios se realizan directamente entre usuario y profesional.',
     readTerms: 'Condiciones de Uso',
     heroBadge: '🌍 6 Países • Sin comisión de intermediación',
-    heroTitle: 'Encuentra al instante a la profesional adecuada en tu zona, incluso urgencias 24/7',
-    heroSubtitle: 'Busca pequeños anuncios profesionales por país, ciudad, barrio y categoría. Contacto directo, tarifas fijadas por la profesional y opiniones de la comunidad.',
+    heroTitle: 'Encuentra al instante al profesional adecuado en tu zona, incluso urgencias 24/7',
+    heroSubtitle: 'Fontaneros, electricistas, cerrajeros, soporte informático, limpieza, canguros y muchos más servicios por país, ciudad y barrio. Contacta directamente con el profesional, sin comisiones sobre el servicio.',
     searchPlaceholder: 'Buscar servicio, especialidad o nombre (ej. fontanero, modista, niñera)...',
     countryLabel: 'País',
     cityLabel: 'Ciudad',
@@ -436,7 +436,7 @@ export const UI_TEXT = {
     resultsCountOne: 'profesional encontrado',
     resetFilters: 'Limpiar filtros',
     availableNowBadge: 'SOS DISPONIBLE AHORA',
-    verifiedBadge: 'Verificada',
+    verifiedBadge: 'Identidad verificada',
     responseTimePrefix: 'Responde en',
     fromPrice: 'Desde',
     perHour: '/h',
@@ -450,7 +450,7 @@ export const UI_TEXT = {
     experienceLabel: 'Experiencia:',
     years: 'años',
     memberRequiredTitle: 'Registro obligatorio para interactuar',
-    memberRequiredDesc: 'Para garantizar la seguridad, las usuarias y profesionales deben registrarse y aceptar las Condiciones de Uso para contactar, opinar o publicar anuncios.',
+    memberRequiredDesc: 'Para garantizar la seguridad, usuarios y profesionales deben registrarse y aceptar las Condiciones de Uso para contactar, opinar o publicar anuncios.',
     quickDemoClient: 'Acceso Demo Rápido: Cliente',
     quickDemoPro: 'Acceso Demo Rápido: Profesional',
     roleClient: 'Usuaria / Cliente',
@@ -458,7 +458,7 @@ export const UI_TEXT = {
     leaveFeedbackTitle: 'Deja tu Valoración y Comentario',
     yourRating: 'Tu puntuación:',
     selectTags: 'Puntos fuertes:',
-    commentPlaceholder: 'Cuenta tu experiencia con esta profesional (puntualidad, calidad, precio)...',
+    commentPlaceholder: 'Cuenta tu experiencia con este profesional (puntualidad, calidad, precio)...',
     submitReviewBtn: 'Publicar Comentario',
     helpfulBtn: 'Útil',
     reportAdBtn: 'Reportar anuncio',
@@ -479,7 +479,7 @@ export const UI_TEXT = {
     sosAvailableCheck: 'Estoy disponible para Urgencias SOS 24/7',
     publishSubmitBtn: 'Publicar Anuncio',
     smartMatchTitle: '⚡ Asistente SOS de Urgencia',
-    smartMatchSubtitle: 'Selecciona tu urgencia y país: te mostramos profesionales listas para intervenir ahora mismo.',
+    smartMatchSubtitle: 'Selecciona tu urgencia y país: te mostramos profesionales listos para intervenir ahora mismo.',
     footerCopy: '© 2026 SOSPro24 Global Directory — Plataforma Internacional de Anuncios Profesionales y Urgencias.',
   },
   de: {
@@ -488,7 +488,7 @@ export const UI_TEXT = {
     readTerms: 'Nutzungsbedingungen',
     heroBadge: '🌍 6 Länder • Keine Vermittlungsprovision',
     heroTitle: 'Finden Sie sofort die passende Fachkraft in Ihrer Nähe – auch im 24/7-Notfall',
-    heroSubtitle: 'Durchsuchen Sie Kleinanzeigen nach Land, Stadt, Stadtteil und Kategorie. Direkter Kontakt, Preise der Fachkraft und Bewertungen der Community.',
+    heroSubtitle: 'Klempner, Elektriker, Schlüsseldienste, IT-Hilfe, Reinigung, Babysitter und viele weitere Dienste nach Land, Stadt und Stadtteil. Kontaktieren Sie die Fachkraft direkt – ohne Provision auf die Leistung.',
     searchPlaceholder: 'Dienstleistung, Fachgebiet oder Name suchen (z.B. Klempner, Schneiderin, Babysitter)...',
     countryLabel: 'Land',
     cityLabel: 'Stadt',
@@ -512,7 +512,7 @@ export const UI_TEXT = {
     resultsCountOne: 'Fachkraft gefunden',
     resetFilters: 'Filter zurücksetzen',
     availableNowBadge: 'SOS JETZT VERFÜGBAR',
-    verifiedBadge: 'Verifiziert',
+    verifiedBadge: 'Identität geprüft',
     responseTimePrefix: 'Antwortet in',
     fromPrice: 'Ab',
     perHour: '/Std.',
@@ -564,7 +564,7 @@ export const LEGAL_SECTIONS = {
   it: [
     {
       title: '1. Natura di Piattaforma Intermediaria Neutrale (Esclusione di Responsabilità)',
-      body: 'SOSPro24 Global opera esclusivamente quale fornitore tecnico di spazio digitale (bacheca elettronica di piccoli annunci) per agevolare il contatto diretto tra Utenti/Clienti e Professioniste/i indipendenti. La Piattaforma NON è un’agenzia di lavoro, NON è il datore di lavoro o committente dei Professionisti e NON è parte dei contratti d’opera o di servizio stipulati tra gli utenti.'
+      body: 'SOSPro24 Global opera esclusivamente quale fornitore tecnico di spazio digitale (bacheca elettronica di piccoli annunci) per agevolare il contatto diretto tra Utenti/Clienti e Professionisti indipendenti. La Piattaforma NON è un’agenzia di lavoro, NON è il datore di lavoro o committente dei Professionisti e NON è parte dei contratti d’opera o di servizio stipulati tra gli utenti.'
     },
     {
       title: '2. Assenza di Responsabilità sulle Prestazioni e sui Pagamenti',
@@ -572,7 +572,7 @@ export const LEGAL_SECTIONS = {
     },
     {
       title: '3. Obbligo di Registrazione e Veridicità dei Profili',
-      body: 'Per contattare i professionisti, pubblicare annunci o inserire feedback e commenti è obbligatoria la registrazione con accettazione espressa delle presenti Condizioni. Le Professioniste garantiscono sotto la propria esclusiva responsabilità di possedere le abilitazioni, licenze e coperture assicurative richieste dalla legge del Paese e della zona in cui operano.'
+      body: 'Per contattare i professionisti, pubblicare annunci o inserire feedback e commenti è obbligatoria la registrazione con accettazione espressa delle presenti Condizioni. I Professionisti garantiscono sotto la propria esclusiva responsabilità di possedere le abilitazioni, licenze e coperture assicurative richieste dalla legge del Paese e della zona in cui operano.'
     },
     {
       title: '4. Regolamento Feedback, Recensioni e Moderazione',
@@ -600,15 +600,15 @@ export const LEGAL_SECTIONS = {
   fr: [
     {
       title: '1. Statut d’Intermédiaire Technique Neutre (Exonération de Responsabilité)',
-      body: 'SOSPro24 Global agit exclusivement en qualité d’hébergeur d’annonces classées permettant la mise en relation directe entre Utilisatrices/Clients et Professionnelles indépendantes. La Plateforme n’est PAS employeur, mandataire ou partie au contrat de prestation de services.'
+      body: 'SOSPro24 Global agit exclusivement en qualité d’hébergeur d’annonces classées permettant la mise en relation directe entre Utilisateurs/Clients et Professionnels indépendants. La Plateforme n’est PAS employeur, mandataire ou partie au contrat de prestation de services.'
     },
     {
       title: '2. Absence de Responsabilité sur les Prestations et Paiements',
-      body: 'Les tarifs, devis, délais et paiements sont convenus directement entre le Client et la Professionnelle. SOSPro24 décline toute responsabilité concernant la qualité des travaux, les retards, les dommages éventuels ou le respect des obligations fiscales et professionnelles locales.'
+      body: 'Les tarifs, devis, délais et paiements sont convenus directement entre le Client et le Professionnel. SOSPro24 décline toute responsabilité concernant la qualité des travaux, les retards, les dommages éventuels ou le respect des obligations fiscales et professionnelles locales.'
     },
     {
       title: '3. Inscription Obligatoire et Exactitude des Informations',
-      body: 'L’inscription et l’acceptation des présentes Conditions sont obligatoires pour contacter une professionnelle, publier une annonce ou laisser un avis. Chaque professionnelle garantit disposer des qualifications et assurances requises dans son pays.'
+      body: 'L’inscription et l’acceptation des présentes Conditions sont obligatoires pour contacter un professionnel, publier une annonce ou laisser un avis. Chaque professionnel garantit disposer des qualifications et assurances requises dans son pays.'
     },
     {
       title: '4. Charte des Avis, Feedbacks et Modération',

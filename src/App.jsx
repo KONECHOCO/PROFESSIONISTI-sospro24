@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Search, ShieldCheck, Zap, PlusCircle, User, Globe, Filter, AlertTriangle, Wrench,
   HeartHandshake, Sparkles, Laptop, X, FileText, ArrowUpDown, Info, Siren, LocateFixed,
-  Crown, Settings, BookmarkPlus, Bookmark, Megaphone,
+  Crown, Settings, BookmarkPlus, Bookmark, Megaphone, Briefcase,
 } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import Flag from './components/Flag';
@@ -725,6 +725,28 @@ export default function App() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold mb-3">{t.heroBadge}</div>
             <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight mb-3">{t.heroTitle}</h1>
             <p className="text-slate-300 text-sm sm:text-base leading-relaxed">{t.heroSubtitle}</p>
+            {/* Due percorsi chiari: chi cerca e chi offre */}
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={() => { const el = document.getElementById('f-search'); el?.scrollIntoView({ behavior: 'smooth', block: 'center' }); el?.focus({ preventScroll: true }); }}
+                className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-left font-extrabold text-sm shadow-lg transition"
+              >
+                <Search className="w-5 h-5 shrink-0" />
+                {t.heroSeekBtn}
+              </button>
+              <button
+                type="button"
+                onClick={openPublish}
+                className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-white text-left transition"
+              >
+                <Briefcase className="w-5 h-5 shrink-0 text-blue-200" />
+                <span className="min-w-0">
+                  <span className="block font-extrabold text-sm">{t.heroProBtn}</span>
+                  <span className="block text-[11px] text-slate-300 leading-snug">{t.heroProHint}</span>
+                </span>
+              </button>
+            </div>
           </div>
 
           <div className="bg-white text-slate-900 rounded-2xl p-4 sm:p-5 shadow-2xl border border-slate-200/80">
@@ -831,7 +853,7 @@ export default function App() {
               <Filter className="w-5 h-5 shrink-0" />
               <div>
                 <div className="text-xs font-bold leading-tight">{t.allCategories}</div>
-                <div className="text-[10px] opacity-80">{listings.length} {listings.length === 1 ? t.adsCountOne : t.adsCount}</div>
+                <div className="text-[10px] opacity-80">{loadState === 'loading' ? '…' : listings.length} {listings.length === 1 ? t.adsCountOne : t.adsCount}</div>
               </div>
             </button>
             {CATEGORIES.map((cat) => {
@@ -849,7 +871,7 @@ export default function App() {
                   <Icon className="w-5 h-5 shrink-0 text-blue-300" />
                   <div className="min-w-0">
                     <div className="text-xs font-bold leading-tight">{pick(cat.names, lang)}</div>
-                    <div className="text-[10px] opacity-80">{count} {count === 1 ? t.prosCountOne : t.prosCount}</div>
+                    <div className="text-[10px] opacity-80">{loadState === 'loading' ? '…' : count} {count === 1 ? t.prosCountOne : t.prosCount}</div>
                   </div>
                 </button>
               );
@@ -890,7 +912,7 @@ export default function App() {
                 className={`px-4 py-2 rounded-xl text-sm font-extrabold transition flex items-center justify-center gap-2 ${view === v ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
               >
                 {label}
-                <span className={`px-1.5 py-0.5 rounded-md text-[11px] ${view === v ? 'bg-blue-600 text-white' : 'bg-slate-300/70 text-slate-700'}`}>{n}</span>
+                <span className={`px-1.5 py-0.5 rounded-md text-[11px] ${view === v ? 'bg-blue-600 text-white' : 'bg-slate-300/70 text-slate-700'}`}>{loadState === 'loading' ? '…' : n}</span>
               </button>
             ))}
           </div>
@@ -1025,6 +1047,7 @@ export default function App() {
             hasFilters={hasFilters}
             onReset={resetAllFilters}
             onPublish={openPublish}
+            onPublishRequest={openPublishRequest}
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1043,7 +1066,7 @@ export default function App() {
           </div>
         ))}
 
-        {view === 'pros' && loadState === 'ok' && (
+        {view === 'pros' && loadState === 'ok' && filteredListings.length > 0 && (
           <div className="mt-8">
             <RequestCta t={t} onPublish={openPublishRequest} compact />
           </div>
@@ -1068,7 +1091,7 @@ export default function App() {
             <span><span className="font-bold text-white">SOSPro24 Global</span> — {t.footerCopy}</span>
           </div>
           <div className="flex items-center gap-4">
-            <button type="button" onClick={() => setShowTerms(true)} className="hover:text-white underline">{t.readTerms}</button>
+            <a href={`https://sospro24.com/terms.html#${lang}`} target="_blank" rel="noopener" className="hover:text-white underline">{t.readTerms}</a>
             <a href={`https://sospro24.com/privacy.html#${lang}`} target="_blank" rel="noopener" className="hover:text-white underline">Privacy</a>
             <a href={`https://sospro24.com/support.html#${lang}`} target="_blank" rel="noopener" className="hover:text-white underline">{t.supportLink}</a>
             {!currentUser && <button type="button" onClick={() => setShowAuth(true)} className="hover:text-white underline">{t.loginRegisterBtn}</button>}

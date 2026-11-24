@@ -12,6 +12,12 @@
       "runtimeExecutable": "cmd",
       "runtimeArgs": ["/c", "set VITE_SHOW_DEMO=true&& npx vite --port 5175 --strictPort"],
       "port": 5175
+    },
+    {
+      "name": "sospro-csp",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/preview-csp.mjs"],
+      "port": 5180
     }
   ]
 }

@@ -11,7 +11,7 @@ export const EXTRA_TEXT = {
     demoBadge: 'DEMO',
     demoBannerTitle: 'Versione dimostrativa',
     demoBannerText:
-      'Gli annunci, i nomi, i numeri di telefono e le recensioni mostrati qui sono fittizi e servono solo a far vedere come funziona la piattaforma. Nessuna professionista reale è ancora presente.',
+      'Gli annunci, i nomi, i numeri di telefono e le recensioni mostrati qui sono fittizi e servono solo a far vedere come funziona la piattaforma. Nessun professionista reale è ancora presente.',
     demoContactNotice: 'Annuncio dimostrativo: i contatti non sono reali, nessuna chiamata o messaggio verrà inviato.',
     emergencyBar: 'Emergenza vitale? Chiama subito il 112 (Regno Unito: 999). SOSPro24 non è un servizio di soccorso.',
     emergencyShort: 'Emergenza vitale: chiama 112 / 999',
@@ -102,18 +102,19 @@ export const EXTRA_TEXT = {
     loading: 'Caricamento…',
     loadError: 'Impossibile caricare gli annunci. Controlla la connessione e riprova.',
     retry: 'Riprova',
-    emptyTitle: 'Ancora nessuna professionista qui',
-    emptyText: 'SOSPro24 è appena partito. Lasciaci la tua email: ti avvisiamo appena arriva una professionista per questa ricerca.',
+    emptyTitle: 'Ancora nessun professionista qui',
+    emptyText: 'SOSPro24 è appena partito. Pubblica gratis una richiesta: i professionisti della zona la vedono e ti contattano.',
+    emptyOrNotify: 'Oppure ricevi un avviso via email',
     waitlistEmailPh: 'La tua email',
-    waitlistConsent: 'Accetto di ricevere un’email quando arrivano professioniste per questa ricerca. Posso chiedere la cancellazione in qualsiasi momento.',
+    waitlistConsent: 'Accetto di ricevere un’email quando arrivano professionisti per questa ricerca. Posso chiedere la cancellazione in qualsiasi momento.',
     waitlistSubmit: 'Avvisami',
     waitlistDone: 'Fatto! Ti scriveremo appena arriva qualcuno.',
     waitlistWaiting: '{n} persone aspettano già un servizio qui',
     waitlistWaitingOne: '1 persona aspetta già un servizio qui',
     reviewsLabelOne: 'recensione',
     waitlistNeedPlace: 'Scegli almeno il paese per iscriverti alla lista d’attesa.',
-    beFirstTitle: 'Sei una professionista?',
-    beFirstText: 'Sii la prima nella tua zona: pubblicare l’annuncio è gratis e i clienti in attesa ti troveranno subito.',
+    beFirstTitle: 'Sei un professionista?',
+    beFirstText: 'Sii il primo nella tua zona: pubblicare l’annuncio è gratis e i clienti in attesa ti troveranno subito.',
     beFirstBtn: 'Pubblica gratis il tuo annuncio',
     demoReviewDisabled: 'Annuncio dimostrativo: non si possono lasciare recensioni.',
     loginToVote: 'Accedi per votare.',
@@ -223,7 +224,8 @@ export const EXTRA_TEXT = {
     loadError: 'Could not load ads. Check your connection and try again.',
     retry: 'Retry',
     emptyTitle: 'No professionals here yet',
-    emptyText: 'SOSPro24 has just launched. Leave your email and we will let you know as soon as a professional is available for this search.',
+    emptyText: 'SOSPro24 has just launched. Post a free request: local professionals will see it and contact you.',
+    emptyOrNotify: 'Or get notified by email',
     waitlistEmailPh: 'Your email',
     waitlistConsent: 'I agree to receive an email when professionals become available for this search. I can ask to be removed at any time.',
     waitlistSubmit: 'Notify me',
@@ -244,13 +246,13 @@ export const EXTRA_TEXT = {
   fr: {
     keywordLabel: 'Service / Mot-clé',
     adsCount: 'annonces',
-    prosCount: 'professionnelles',
+    prosCount: 'professionnels',
     adsCountOne: 'annonce',
-    prosCountOne: 'professionnelle',
+    prosCountOne: 'professionnel',
     demoBadge: 'DÉMO',
     demoBannerTitle: 'Version de démonstration',
     demoBannerText:
-      'Les annonces, noms, numéros de téléphone et avis affichés ici sont fictifs et servent uniquement à montrer le fonctionnement de la plateforme. Aucune professionnelle réelle n’est encore inscrite.',
+      'Les annonces, noms, numéros de téléphone et avis affichés ici sont fictifs et servent uniquement à montrer le fonctionnement de la plateforme. Aucun professionnel réel n’est encore inscrit.',
     demoContactNotice: 'Annonce de démonstration : les coordonnées ne sont pas réelles, aucun appel ni message ne sera envoyé.',
     emergencyBar: 'Urgence vitale ? Appelez immédiatement le 112 (Royaume-Uni : 999). SOSPro24 n’est pas un service de secours.',
     emergencyShort: 'Urgence vitale : appelez le 112 / 999',
@@ -268,9 +270,9 @@ export const EXTRA_TEXT = {
     reviewsListTitle: 'Avis',
     reportReview: 'Signaler l’avis',
     reportSent: 'Signalement reçu. Notre équipe de modération va l’examiner.',
-    showAllSos: 'Afficher toutes les professionnelles SOS disponibles',
+    showAllSos: 'Afficher tous les professionnels SOS disponibles',
     emergencyType: 'Type d’urgence',
-    smartNoResults: 'Aucune professionnelle SOS disponible pour ce choix. Essayez un autre pays ou une autre catégorie.',
+    smartNoResults: 'Aucun professionnel SOS disponible pour ce choix. Essayez un autre pays ou une autre catégorie.',
     prototypeNote:
       'Prototype : le compte est enregistré uniquement sur cet appareil et ne demande pas de mot de passe. À remplacer par une vraie connexion avant le lancement.',
     demoLoginTitle: 'Essai rapide (démo)',
@@ -278,25 +280,25 @@ export const EXTRA_TEXT = {
     fullNamePh: 'Ex. Marie Dupont',
     email: 'E-mail',
     registerSubmit: 'Terminer l’inscription et se connecter',
-    businessName: 'Nom de la professionnelle / activité',
+    businessName: 'Nom du professionnel / activité',
     businessNamePh: 'Ex. Laura Galli',
     categoryMain: 'Catégorie principale',
     categoryService: 'Service spécifique',
     otherOption: 'Autre…',
     otherCityPh: 'Saisissez la ville',
     otherZonePh: 'Saisissez le quartier',
-    adTitlePh: 'Ex. Plombière — intervention rapide dans toute la ville',
+    adTitlePh: 'Ex. Plombier — intervention rapide dans toute la ville',
     adBioPh: 'Décrivez votre expérience, zones couvertes, horaires et garanties…',
     skillsLabel: 'Compétences (séparées par des virgules)',
     phoneInvalid: 'Saisissez un numéro valide avec indicatif international (ex. +33 6 12 34 56 78).',
     adPublished: 'Annonce publiée. Elle est maintenant visible par tous.',
     adDeleted: 'Annonce supprimée.',
-    userAdNote: 'Annonce publiée par une utilisatrice. Vérifiez toujours les qualifications directement auprès de la professionnelle.',
+    userAdNote: 'Annonce publiée par un utilisateur. Vérifiez toujours les qualifications directement auprès du professionnel.',
     notVerifiedNote: 'Identité et qualifications non vérifiées par la plateforme.',
     profileMode: 'Mode du profil',
-    profileModeDesc: 'Passez de Client à Professionnelle à tout moment',
-    savedPros: 'Professionnelles enregistrées',
-    noSaved: 'Aucune professionnelle enregistrée. Touchez le cœur d’une annonce pour l’ajouter.',
+    profileModeDesc: 'Passez de Client à Professionnel à tout moment',
+    savedPros: 'Professionnels enregistrés',
+    noSaved: 'Aucun professionnel enregistré. Touchez le cœur d’une annonce pour l’ajouter.',
     openProfile: 'Ouvrir la fiche',
     myAds: 'Mes annonces',
     noMyAds: 'Vous n’avez encore publié aucune annonce.',
@@ -341,17 +343,18 @@ export const EXTRA_TEXT = {
     loading: 'Chargement…',
     loadError: 'Impossible de charger les annonces. Vérifiez la connexion et réessayez.',
     retry: 'Réessayer',
-    emptyTitle: 'Pas encore de professionnelle ici',
-    emptyText: 'SOSPro24 vient de démarrer. Laissez votre e-mail : nous vous préviendrons dès qu’une professionnelle sera disponible pour cette recherche.',
+    emptyTitle: 'Pas encore de professionnel ici',
+    emptyText: 'SOSPro24 vient de démarrer. Publiez gratuitement une demande : les professionnels du quartier la verront et vous contacteront.',
+    emptyOrNotify: 'Ou soyez prévenu par e-mail',
     waitlistEmailPh: 'Votre e-mail',
-    waitlistConsent: 'J’accepte de recevoir un e-mail lorsque des professionnelles seront disponibles pour cette recherche. Je peux demander la suppression à tout moment.',
+    waitlistConsent: 'J’accepte de recevoir un e-mail lorsque des professionnels seront disponibles pour cette recherche. Je peux demander la suppression à tout moment.',
     waitlistSubmit: 'Prévenez-moi',
-    waitlistDone: 'C’est noté ! Nous vous écrirons dès qu’une professionnelle arrive.',
+    waitlistDone: 'C’est noté ! Nous vous écrirons dès qu’un professionnel arrive.',
     waitlistWaiting: '{n} personnes attendent déjà un service ici',
     waitlistWaitingOne: '1 personne attend déjà un service ici',
     reviewsLabelOne: 'avis',
     waitlistNeedPlace: 'Choisissez au moins un pays pour rejoindre la liste d’attente.',
-    beFirstTitle: 'Vous êtes une professionnelle ?',
+    beFirstTitle: 'Vous êtes un professionnel ?',
     beFirstText: 'Soyez la première de votre quartier : publier une annonce est gratuit et les clients en attente vous trouveront tout de suite.',
     beFirstBtn: 'Publier gratuitement mon annonce',
     demoReviewDisabled: 'Annonce de démonstration : impossible de laisser un avis.',
@@ -387,7 +390,7 @@ export const EXTRA_TEXT = {
     reviewsListTitle: 'Opiniones',
     reportReview: 'Denunciar opinión',
     reportSent: 'Denuncia recibida. El equipo de moderación la revisará.',
-    showAllSos: 'Mostrar todas las profesionales SOS disponibles',
+    showAllSos: 'Mostrar todos los profesionales SOS disponibles',
     emergencyType: 'Tipo de emergencia',
     smartNoResults: 'No hay profesionales SOS disponibles para esta elección. Prueba otro país o categoría.',
     prototypeNote:
@@ -404,13 +407,13 @@ export const EXTRA_TEXT = {
     otherOption: 'Otra…',
     otherCityPh: 'Escribe la ciudad',
     otherZonePh: 'Escribe el barrio',
-    adTitlePh: 'Ej. Fontanera — intervención rápida en toda la ciudad',
+    adTitlePh: 'Ej. Fontanero — intervención rápida en toda la ciudad',
     adBioPh: 'Describe tu experiencia, zonas cubiertas, horarios y garantías…',
     skillsLabel: 'Habilidades (separadas por comas)',
     phoneInvalid: 'Introduce un teléfono válido con prefijo internacional (ej. +34 612 345 678).',
     adPublished: 'Anuncio publicado. Ya es visible para todos.',
     adDeleted: 'Anuncio eliminado.',
-    userAdNote: 'Anuncio publicado por una usuaria. Comprueba siempre titulaciones y licencias directamente con la profesional.',
+    userAdNote: 'Anuncio publicado por un usuario. Comprueba siempre titulaciones y licencias directamente con el profesional.',
     notVerifiedNote: 'Identidad y titulaciones no verificadas por la plataforma.',
     profileMode: 'Modo de perfil',
     profileModeDesc: 'Cambia entre Cliente y Profesional cuando quieras',
@@ -461,7 +464,8 @@ export const EXTRA_TEXT = {
     loadError: 'No se pudieron cargar los anuncios. Comprueba la conexión e inténtalo de nuevo.',
     retry: 'Reintentar',
     emptyTitle: 'Todavía no hay profesionales aquí',
-    emptyText: 'SOSPro24 acaba de empezar. Déjanos tu correo y te avisaremos en cuanto haya una profesional para esta búsqueda.',
+    emptyText: 'SOSPro24 acaba de empezar. Publica gratis una solicitud: los profesionales de la zona la verán y te contactarán.',
+    emptyOrNotify: 'O recibe un aviso por correo',
     waitlistEmailPh: 'Tu correo',
     waitlistConsent: 'Acepto recibir un correo cuando haya profesionales para esta búsqueda. Puedo pedir la baja en cualquier momento.',
     waitlistSubmit: 'Avísame',
@@ -471,7 +475,7 @@ export const EXTRA_TEXT = {
     reviewsLabelOne: 'opinión',
     waitlistNeedPlace: 'Elige al menos un país para apuntarte a la lista de espera.',
     beFirstTitle: '¿Eres profesional?',
-    beFirstText: 'Sé la primera de tu zona: publicar el anuncio es gratis y los clientes en espera te encontrarán enseguida.',
+    beFirstText: 'Sé el primero de tu zona: publicar el anuncio es gratis y los clientes en espera te encontrarán enseguida.',
     beFirstBtn: 'Publica gratis tu anuncio',
     demoReviewDisabled: 'Anuncio de demostración: no se pueden dejar opiniones.',
     loginToVote: 'Inicia sesión para votar.',
@@ -523,7 +527,7 @@ export const EXTRA_TEXT = {
     otherOption: 'Andere…',
     otherCityPh: 'Stadt eingeben',
     otherZonePh: 'Stadtteil eingeben',
-    adTitlePh: 'z. B. Installateurin — schnelle Einsätze in der ganzen Stadt',
+    adTitlePh: 'z. B. Installateur — schnelle Einsätze in der ganzen Stadt',
     adBioPh: 'Beschreiben Sie Erfahrung, Einsatzgebiete, Zeiten und Garantien…',
     skillsLabel: 'Kompetenzen (durch Komma getrennt)',
     phoneInvalid: 'Geben Sie eine gültige Telefonnummer mit Ländervorwahl ein (z. B. +49 151 2345678).',
@@ -580,7 +584,8 @@ export const EXTRA_TEXT = {
     loadError: 'Anzeigen konnten nicht geladen werden. Verbindung prüfen und erneut versuchen.',
     retry: 'Erneut versuchen',
     emptyTitle: 'Hier gibt es noch keine Fachkräfte',
-    emptyText: 'SOSPro24 ist gerade gestartet. Hinterlassen Sie Ihre E-Mail: Wir benachrichtigen Sie, sobald eine Fachkraft für diese Suche verfügbar ist.',
+    emptyText: 'SOSPro24 ist gerade gestartet. Geben Sie kostenlos ein Gesuch auf: Fachkräfte aus der Nähe sehen es und melden sich bei Ihnen.',
+    emptyOrNotify: 'Oder per E-Mail benachrichtigt werden',
     waitlistEmailPh: 'Ihre E-Mail',
     waitlistConsent: 'Ich möchte eine E-Mail erhalten, sobald Fachkräfte für diese Suche verfügbar sind. Ich kann jederzeit die Löschung verlangen.',
     waitlistSubmit: 'Benachrichtigen',
@@ -590,7 +595,7 @@ export const EXTRA_TEXT = {
     reviewsLabelOne: 'Bewertung',
     waitlistNeedPlace: 'Wählen Sie mindestens ein Land, um sich auf die Warteliste zu setzen.',
     beFirstTitle: 'Sind Sie eine Fachkraft?',
-    beFirstText: 'Seien Sie die Erste in Ihrer Gegend: Die Anzeige ist kostenlos und wartende Kunden finden Sie sofort.',
+    beFirstText: 'Seien Sie unter den Ersten in Ihrer Gegend: Die Anzeige ist kostenlos und wartende Kunden finden Sie sofort.',
     beFirstBtn: 'Anzeige kostenlos veröffentlichen',
     demoReviewDisabled: 'Demo-Anzeige: Bewertungen sind nicht möglich.',
     loginToVote: 'Zum Abstimmen bitte anmelden.',
@@ -620,6 +625,18 @@ export const LEGAL_EXTRA = {
       title: '8. Richieste dei clienti',
       body: 'Chi pubblica una richiesta (es. “Cerco un idraulico”) rende pubblici il testo, la città, la categoria e il nome abbreviato; il numero di telefono è visibile solo agli utenti registrati finché la richiesta è aperta. Le richieste scadono dopo 30 giorni e si possono chiudere o eliminare in ogni momento. È vietato pubblicare dati personali di terzi, contenuti offensivi, pubblicità o richieste per attività illecite: le richieste segnalate possono essere rimosse. SOSPro24 non verifica le richieste né garantisce che qualcuno risponda.',
     },
+    {
+      title: '9. Contenuti vietati, sospensione ed eliminazione dell’account',
+      body: 'Negli annunci, nei profili, nelle richieste e nelle recensioni è vietato pubblicare: dati personali di terzi senza consenso, contenuti falsi, ingannevoli, offensivi, discriminatori o sessuali, servizi o attività illecite, titoli, abilitazioni o certificazioni che non si possiedono, pubblicità non pertinente o spam. Chiunque può segnalare un contenuto o bloccare una persona con i pulsanti presenti nell’annuncio o nella richiesta. Le segnalazioni vengono esaminate e i contenuti che violano queste regole possono essere rimossi; in caso di violazioni gravi o ripetute l’account può essere sospeso o chiuso. Puoi eliminare in ogni momento il tuo account dal profilo: annunci, richieste e dati collegati vengono cancellati.'
+    },
+    {
+      title: '10. Costi, Premium e pubblicità',
+      body: 'Registrarsi, pubblicare annunci e richieste e contattare i professionisti è gratuito. SOSPro24 non applica commissioni sulle prestazioni. Nell’app per iPhone e Android sono mostrati annunci pubblicitari (Google AdMob); l’acquisto facoltativo SOSPro24 Premium, una tantum e gestito da App Store o Google Play, toglie la pubblicità e sblocca funzioni aggiuntive. Prezzo, pagamento e rimborsi seguono le regole dello store da cui acquisti.'
+    },
+    {
+      title: '11. Gestore, contatti, reclami e legge applicabile',
+      body: 'SOSPro24 (sito sospro24.com e app) è gestito da INZA KONE – Ikonet Solutions, Italia. Per domande, segnalazioni o reclami scrivi a supporto@sospro24.com: rispondiamo appena possibile. Queste Condizioni sono regolate dalla legge italiana, fermi restando i diritti inderogabili che la legge del tuo Paese ti riconosce come consumatore. Possiamo aggiornare le Condizioni: la versione in vigore è sempre pubblicata su sospro24.com/terms.html con la data dell’ultimo aggiornamento.'
+    }
   ],
   en: [
     {
@@ -638,11 +655,23 @@ export const LEGAL_EXTRA = {
       title: '8. Customer requests',
       body: 'When you post a request (e.g. “Looking for a plumber”), the text, city, category and your short name become public; your phone number is visible only to registered users while the request is open. Requests expire after 30 days and can be closed or deleted at any time. You must not post third parties’ personal data, offensive content, advertising or requests for illegal activities: reported requests may be removed. SOSPro24 does not check requests or guarantee that anyone will reply.',
     },
+    {
+      title: '9. Prohibited content, suspension and account deletion',
+      body: 'Ads, profiles, requests and reviews must not contain: third parties’ personal data without consent, false, misleading, offensive, discriminatory or sexual content, illegal services or activities, qualifications, licences or certifications you do not hold, irrelevant advertising or spam. Anyone can report content or block a person with the buttons on each ad or request. Reports are reviewed and content that breaks these rules may be removed; serious or repeated violations may lead to the account being suspended or closed. You can delete your account at any time from your profile: your ads, requests and related data are erased.'
+    },
+    {
+      title: '10. Costs, Premium and advertising',
+      body: 'Signing up, posting ads and requests and contacting professionals is free. SOSPro24 charges no commission on services. The iPhone and Android app shows ads (Google AdMob); the optional one-time SOSPro24 Premium purchase, handled by the App Store or Google Play, removes ads and unlocks extra features. Price, payment and refunds follow the rules of the store you buy from.'
+    },
+    {
+      title: '11. Operator, contact, complaints and governing law',
+      body: 'SOSPro24 (sospro24.com and the app) is operated by INZA KONE – Ikonet Solutions, Italy. For questions, reports or complaints write to supporto@sospro24.com: we reply as soon as possible. These Terms are governed by Italian law, without prejudice to the mandatory rights the law of your country grants you as a consumer. We may update these Terms: the current version is always published at sospro24.com/terms.html with its last-updated date.'
+    }
   ],
   fr: [
     {
       title: '5. Urgences vitales',
-      body: 'SOSPro24 n’est pas un service de secours. En cas de danger pour la vie ou la santé, appelez immédiatement le numéro d’urgence (112 dans l’UE et en Suisse, 999 au Royaume-Uni). Les délais de réponse indiqués dans les annonces sont déclarés par les professionnelles et ne sont pas garantis.',
+      body: 'SOSPro24 n’est pas un service de secours. En cas de danger pour la vie ou la santé, appelez immédiatement le numéro d’urgence (112 dans l’UE et en Suisse, 999 au Royaume-Uni). Les délais de réponse indiqués dans les annonces sont déclarés par les professionnels et ne sont pas garantis.',
     },
     {
       title: '6. Données personnelles et confidentialité (RGPD)',
@@ -650,12 +679,24 @@ export const LEGAL_EXTRA = {
     },
     {
       title: '7. Droits des consommateurs et droit applicable',
-      body: 'Aucune stipulation de ces Conditions ne limite les droits impératifs que la loi de votre pays vous reconnaît en tant que consommateur, ni la responsabilité qui ne peut être exclue par la loi. La professionnelle reste seule responsable envers le client des prestations qu’elle réalise.',
+      body: 'Aucune stipulation de ces Conditions ne limite les droits impératifs que la loi de votre pays vous reconnaît en tant que consommateur, ni la responsabilité qui ne peut être exclue par la loi. Le professionnel reste seul responsable envers le client des prestations qu’il réalise.',
     },
     {
       title: '8. Demandes des clients',
       body: 'Quand tu publies une demande (ex. « Je cherche un plombier »), le texte, la ville, la catégorie et ton nom abrégé deviennent publics ; ton numéro n’est visible que par les utilisateurs inscrits tant que la demande est ouverte. Les demandes expirent après 30 jours et peuvent être fermées ou supprimées à tout moment. Il est interdit de publier des données personnelles de tiers, des contenus offensants, de la publicité ou des demandes pour des activités illicites : les demandes signalées peuvent être supprimées. SOSPro24 ne vérifie pas les demandes et ne garantit pas que quelqu’un réponde.',
     },
+    {
+      title: '9. Contenus interdits, suspension et suppression du compte',
+      body: 'Il est interdit de publier dans les annonces, profils, demandes et avis : des données personnelles de tiers sans leur accord, des contenus faux, trompeurs, injurieux, discriminatoires ou sexuels, des services ou activités illicites, des titres, habilitations ou certifications que l’on ne possède pas, de la publicité hors sujet ou du spam. Chacun peut signaler un contenu ou bloquer une personne avec les boutons présents sur l’annonce ou la demande. Les signalements sont examinés et les contenus qui enfreignent ces règles peuvent être supprimés ; en cas de violations graves ou répétées, le compte peut être suspendu ou fermé. Vous pouvez supprimer votre compte à tout moment depuis votre profil : annonces, demandes et données liées sont effacées.'
+    },
+    {
+      title: '10. Coûts, Premium et publicité',
+      body: 'L’inscription, la publication d’annonces et de demandes et la prise de contact avec les professionnels sont gratuites. SOSPro24 ne prend aucune commission sur les prestations. L’appli iPhone et Android affiche de la publicité (Google AdMob) ; l’achat facultatif SOSPro24 Premium, unique et géré par l’App Store ou Google Play, supprime la publicité et débloque des fonctions supplémentaires. Le prix, le paiement et les remboursements suivent les règles de la boutique utilisée.'
+    },
+    {
+      title: '11. Éditeur, contact, réclamations et droit applicable',
+      body: 'SOSPro24 (site sospro24.com et appli) est édité par INZA KONE – Ikonet Solutions, Italie. Pour toute question, signalement ou réclamation, écrivez à supporto@sospro24.com : nous répondons dès que possible. Les présentes Conditions sont régies par le droit italien, sans préjudice des droits impératifs que la loi de votre pays vous reconnaît en tant que consommateur. Nous pouvons mettre à jour ces Conditions : la version en vigueur est toujours publiée sur sospro24.com/terms.html avec sa date de mise à jour.'
+    }
   ],
   es: [
     {
@@ -668,12 +709,24 @@ export const LEGAL_EXTRA = {
     },
     {
       title: '7. Derechos de los consumidores y ley aplicable',
-      body: 'Nada en estas Condiciones limita los derechos irrenunciables que la ley de tu país te reconoce como consumidor, ni la responsabilidad que no pueda excluirse legalmente. La profesional es la única responsable ante el cliente de los servicios que presta.',
+      body: 'Nada en estas Condiciones limita los derechos irrenunciables que la ley de tu país te reconoce como consumidor, ni la responsabilidad que no pueda excluirse legalmente. El profesional es el único responsable ante el cliente de los servicios que presta.',
     },
     {
       title: '8. Solicitudes de los clientes',
       body: 'Al publicar una solicitud (p. ej. «Busco fontanero»), el texto, la ciudad, la categoría y tu nombre abreviado pasan a ser públicos; tu número solo lo ven los usuarios registrados mientras la solicitud está abierta. Las solicitudes caducan a los 30 días y se pueden cerrar o eliminar en cualquier momento. Está prohibido publicar datos personales de terceros, contenidos ofensivos, publicidad o solicitudes para actividades ilícitas: las solicitudes denunciadas pueden eliminarse. SOSPro24 no verifica las solicitudes ni garantiza que alguien responda.',
     },
+    {
+      title: '9. Contenidos prohibidos, suspensión y eliminación de la cuenta',
+      body: 'En anuncios, perfiles, solicitudes y opiniones está prohibido publicar: datos personales de terceros sin su consentimiento, contenidos falsos, engañosos, ofensivos, discriminatorios o sexuales, servicios o actividades ilícitas, títulos, habilitaciones o certificaciones que no se poseen, publicidad no pertinente o spam. Cualquiera puede denunciar un contenido o bloquear a una persona con los botones del anuncio o de la solicitud. Las denuncias se revisan y los contenidos que incumplen estas reglas pueden eliminarse; ante infracciones graves o repetidas la cuenta puede suspenderse o cerrarse. Puedes eliminar tu cuenta en cualquier momento desde tu perfil: se borran anuncios, solicitudes y datos relacionados.'
+    },
+    {
+      title: '10. Costes, Premium y publicidad',
+      body: 'Registrarse, publicar anuncios y solicitudes y contactar con profesionales es gratis. SOSPro24 no cobra comisiones sobre los servicios. La app para iPhone y Android muestra publicidad (Google AdMob); la compra opcional SOSPro24 Premium, de pago único y gestionada por App Store o Google Play, elimina la publicidad y desbloquea funciones adicionales. Precio, pago y reembolsos siguen las reglas de la tienda donde compras.'
+    },
+    {
+      title: '11. Titular, contacto, reclamaciones y ley aplicable',
+      body: 'SOSPro24 (web sospro24.com y app) está gestionado por INZA KONE – Ikonet Solutions, Italia. Para preguntas, denuncias o reclamaciones escribe a supporto@sospro24.com: respondemos lo antes posible. Estas Condiciones se rigen por la ley italiana, sin perjuicio de los derechos irrenunciables que la ley de tu país te reconoce como consumidor. Podemos actualizar estas Condiciones: la versión vigente se publica siempre en sospro24.com/terms.html con la fecha de la última actualización.'
+    }
   ],
   de: [
     {
@@ -692,5 +745,17 @@ export const LEGAL_EXTRA = {
       title: '8. Gesuche von Kunden',
       body: 'Wer ein Gesuch aufgibt (z. B. „Suche Klempner“), macht Text, Stadt, Kategorie und den abgekürzten Namen öffentlich; die Telefonnummer sehen nur registrierte Nutzer, solange das Gesuch offen ist. Gesuche enden nach 30 Tagen und können jederzeit geschlossen oder gelöscht werden. Verboten sind personenbezogene Daten Dritter, beleidigende Inhalte, Werbung und Gesuche für rechtswidrige Tätigkeiten: Gemeldete Gesuche können entfernt werden. SOSPro24 prüft Gesuche nicht und garantiert nicht, dass jemand antwortet.',
     },
+    {
+      title: '9. Verbotene Inhalte, Sperrung und Löschung des Kontos',
+      body: 'In Anzeigen, Profilen, Gesuchen und Bewertungen ist Folgendes verboten: personenbezogene Daten Dritter ohne Einwilligung, falsche, irreführende, beleidigende, diskriminierende oder sexuelle Inhalte, illegale Leistungen oder Tätigkeiten, Titel, Zulassungen oder Zertifikate, die man nicht besitzt, themenfremde Werbung oder Spam. Jede Person kann Inhalte melden oder jemanden blockieren – über die Schaltflächen in der Anzeige oder im Gesuch. Meldungen werden geprüft; Inhalte, die gegen diese Regeln verstoßen, können entfernt werden. Bei schweren oder wiederholten Verstößen kann das Konto gesperrt oder geschlossen werden. Sie können Ihr Konto jederzeit im Profil löschen: Anzeigen, Gesuche und zugehörige Daten werden gelöscht.'
+    },
+    {
+      title: '10. Kosten, Premium und Werbung',
+      body: 'Registrierung, das Aufgeben von Anzeigen und Gesuchen sowie die Kontaktaufnahme mit Fachkräften sind kostenlos. SOSPro24 erhebt keine Provision auf Leistungen. Die App für iPhone und Android zeigt Werbung (Google AdMob); der optionale Einmalkauf SOSPro24 Premium, abgewickelt über App Store oder Google Play, entfernt die Werbung und schaltet Zusatzfunktionen frei. Preis, Zahlung und Erstattungen richten sich nach den Regeln des jeweiligen Stores.'
+    },
+    {
+      title: '11. Betreiber, Kontakt, Beschwerden und anwendbares Recht',
+      body: 'SOSPro24 (Website sospro24.com und App) wird betrieben von INZA KONE – Ikonet Solutions, Italien. Für Fragen, Meldungen oder Beschwerden schreiben Sie an supporto@sospro24.com – wir antworten so schnell wie möglich. Diese Bedingungen unterliegen italienischem Recht, unbeschadet der zwingenden Rechte, die Ihnen das Recht Ihres Landes als Verbraucher gewährt. Wir können diese Bedingungen aktualisieren: Die gültige Fassung ist immer unter sospro24.com/terms.html mit dem Datum der letzten Änderung veröffentlicht.'
+    }
   ],
 };
