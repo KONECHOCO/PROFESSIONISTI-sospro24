@@ -34,6 +34,7 @@ const FIELDS = {
   phone: /telefono|phone|tel/i,
   website: /sito|website|web/i,
   source: /scheda|fonte|source|pagine/i,
+  notes: /^not[ae]|note|notes/i,
 };
 
 export function csvToContacts(text) {
@@ -56,6 +57,7 @@ export function csvToContacts(text) {
       phone: get('phone').split(';')[0].trim(),
       website: get('website'),
       source: get('source'),
+      notes: get('notes').slice(0, 1000),
       lang: LANG_OF[country] || 'it',
     };
   }).filter((c) => c.business_name);
