@@ -195,11 +195,24 @@ as $$
 declare
   r extensions.http_response;
   h extensions.http_header[];
-  k text;
+  attempt int := 0;
 begin
+  perform extensions.http_set_curlopt('CURLOPT_CONNECTTIMEOUT', '8');
   perform extensions.http_set_curlopt('CURLOPT_TIMEOUT', '20');
   select coalesce(array_agg(extensions.http_header(key, value)), '{}') into h from jsonb_each_text(coalesce(p_headers, '{}'));
-  r := extensions.http((p_method, p_url, h, 'application/json', case when p_body is null then null else p_body::text end)::extensions.http_request);
+  -- Un secondo tentativo se la rete di Supabase ha un momento di instabilità (connessione scaduta)
+  loop
+    attempt := attempt + 1;
+    begin
+      r := extensions.http((p_method, p_url, h, 'application/json', case when p_body is null then null else p_body::text end)::extensions.http_request);
+      exit;
+    exception when others then
+      if attempt >= 2 or sqlerrm !~* 'timed out|resolve|connect' then
+        raise exception 'Collegamento non riuscito (%): riprova tra un minuto', left(sqlerrm, 80);
+      end if;
+      perform pg_sleep(1);
+    end;
+  end loop;
   return jsonb_build_object('status', r.status, 'body', case when r.content ~ '^\s*[\[{]' then r.content::jsonb else to_jsonb(r.content) end);
 end;
 $$;
@@ -246,7 +259,8 @@ begin
     url     := 'https://api.telegram.org/bot' || v_token || '/sendMessage',
     body    := jsonb_build_object('chat_id', v_chat, 'text', left(p_text, 4000), 'parse_mode', 'HTML',
                                   'disable_web_page_preview', true),
-    headers := '{"Content-Type": "application/json"}'::jsonb
+    headers := '{"Content-Type": "application/json"}'::jsonb,
+    timeout_milliseconds := 10000
   );
 end;
 $$;
