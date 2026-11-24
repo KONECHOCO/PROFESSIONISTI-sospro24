@@ -6,6 +6,15 @@ export default defineConfig({
   server: {
     port: 5173,
     open: false
+  },
+  build: {
+    rollupOptions: {
+      // Sito/app, pannello amministratore e pagina di disiscrizione dalle email
+      input: {
+        main: 'index.html',
+        admin: 'admin.html',
+        unsubscribe: 'unsubscribe.html'
+      }
+    }
   }
 });
-

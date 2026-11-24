@@ -25,6 +25,19 @@ Premium (solo app): niente pubblicità, ricerche salvate, tema scuro, preferiti 
 - Link diretti: `https://sospro24.com/?view=requests`, `?req=<id>`, `?ad=<id>`.
 - Moderazione: dal Table Editor di Supabase (`reports`; `status='removed'` su annunci o richieste).
 
+### Pannello amministratore (dal 24/11/2026)
+- **https://sospro24.com/admin.html** (accesso con l'account SOSPro24; amministratori in `private.admins`). Sezioni: Dashboard, Account (crea/modifica/blocca/elimina, crea annuncio per conto del professionista), Annunci, Richieste, Segnalazioni, Contatti da invitare (import CSV, invito con un click), Email inviate, Lista d'attesa, Impostazioni.
+- Database: `supabase/admin.sql` (già eseguito il 24/11, rieseguibile). Funzioni `admin_*` che controllano l'amministratore; schema `private` non esposto; estensioni http, pg_net, pg_cron, Vault.
+- Chiavi (SendGrid — stesso account di IT Helpdesk/ambasciatori —, token bot Telegram, chiave di servizio Supabase) si incollano nel pannello → Impostazioni e restano cifrate nel Vault: **mai in chat né nel codice**.
+- Email: mittente predefinito `supporto@ikonetsolutions.com` (verificato su SendGrid), risposte a `supporto@sospro24.com`; piè di pagina con chi siamo + link di disiscrizione (`/unsubscribe.html`); limite giornaliero nelle impostazioni.
+- Telegram: notifiche in tempo reale (registrazioni, annunci, richieste, segnalazioni, recensioni) + riepilogo ogni mattina (ora scelta nel pannello).
+- Prova locale senza database: `npm run dev` → `http://localhost:5173/admin.html?mock` (dati finti, esclusi dalla build).
+- Contatti da invitare: `C:\Users\rebic\Downloads\sospro24-contatti-italia-paginegialle.csv` (131 attività, 53 email) e `sospro24_contatti_professionisti_120.csv` (estero, in pausa).
+
+### Strategia (24/11)
+Tutti i 6 paesi restano aperti; il reclutamento manuale dei professionisti parte dall'Italia (iscrizione assistita: invito → consenso → account + annuncio creati dal pannello). Analisi di Manus AI in `C:\Users\rebic\Downloads\main.pdf`.
+Testi del sito resi neutri ("professionisti", non più al femminile); pagina vera `/terms.html` generata da `scripts/build-terms.mjs` a ogni build; HSTS e CSP scritti in `deploy/nginx-sospro24.conf` (vanno applicati sul server con sudo).
+
 ## Stato store
 | Store | Stato |
 |---|---|
