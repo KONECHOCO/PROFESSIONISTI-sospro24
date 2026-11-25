@@ -22,7 +22,12 @@ export const createUser = (u) => rpc('admin_create_user', {
   p_email: u.email, p_name: u.name, p_role: u.role, p_country: u.country, p_city: u.city || null,
   p_lang: u.lang, p_welcome: u.welcome, p_contact: u.contactId || null,
 });
-export const setBanned = (id, banned, reason) => rpc('admin_set_banned', { p_id: id, p_banned: banned, p_reason: reason || null });
+export const sendWelcome = async (id) => {
+  const r = await rpc('admin_send_welcome', { p_user: id });
+  if (r && r.ok === false) throw new Error(r.error || 'Invio non riuscito');
+  return r;
+};
+export const setBanned =(id, banned, reason) => rpc('admin_set_banned', { p_id: id, p_banned: banned, p_reason: reason || null });
 export const deleteUser = (id, reason) => rpc('admin_delete_user', { p_id: id, p_reason: reason || null });
 
 export const listListings = () => rpc('admin_list_listings');

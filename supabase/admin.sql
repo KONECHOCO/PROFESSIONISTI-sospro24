@@ -812,8 +812,61 @@ begin
 end;
 $$;
 
--- Crea un account già confermato e (se richiesto) gli manda un'email di benvenuto
--- con il link per scegliere la password. Utile per l'iscrizione assistita dei professionisti.
+-- Benvenuto ai nuovi account: l'email NON contiene il link monouso di Supabase (gli antivirus
+-- delle caselle aziendali, es. Microsoft 365, lo aprono e lo "consumano"), ma un link a
+-- sospro24.com/benvenuto.html?t=<codice> valido 7 giorni. Lì la persona preme "Scegli la password":
+-- solo in quel momento si crea il link di Supabase e lo si apre subito.
+create table if not exists private.welcome_tokens (
+  token      text primary key default encode(extensions.gen_random_bytes(16), 'hex'),
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null default now() + interval '7 days',
+  used_at    timestamptz
+);
+
+create or replace function private.send_welcome(p_user uuid, p_contact uuid default null)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  u      record;
+  v_lang text;
+  v_name text;
+  v_tok  text;
+  v_url  text;
+  v_subj text;
+  v_text text;
+  v_sign text := E'\n\nIkonet Solutions\nSOSPro24\n📞 Tel. / WhatsApp: +39 329 618 5600\n💬 https://wa.me/393296185600';
+begin
+  select a.email, a.raw_user_meta_data ->> 'lang' as lang, p.name into u
+    from auth.users a left join public.profiles p on p.id = a.id where a.id = p_user;
+  if u.email is null then
+    raise exception 'Account non trovato';
+  end if;
+  v_lang := case when u.lang in ('it', 'en', 'fr', 'es', 'de') then u.lang else 'it' end;
+  v_name := coalesce(nullif(btrim(u.name), ''), split_part(u.email, '@', 1));
+  insert into private.welcome_tokens (user_id) values (p_user) returning token into v_tok;
+  v_url := private.setting('site_url') || '/benvenuto.html?t=' || v_tok;
+  v_subj := case v_lang
+    when 'en' then 'Your SOSPro24 account is ready'
+    when 'fr' then 'Votre compte SOSPro24 est prêt'
+    when 'es' then 'Tu cuenta de SOSPro24 está lista'
+    when 'de' then 'Ihr SOSPro24-Konto ist bereit'
+    else 'Il tuo account SOSPro24 è pronto' end;
+  v_text := case v_lang
+    when 'en' then 'Hello ' || v_name || E',\n\nas agreed, we have created your free SOSPro24 account with this email address.\nOpen this page and tap "Choose your password" (valid for 7 days):\n' || v_url || E'\n\nThen sign in at https://sospro24.com with this email and your new password, and check your profile and ad. You can edit or delete them at any time.\n\nThank you,' || v_sign
+    when 'fr' then 'Bonjour ' || v_name || E',\n\ncomme convenu, nous avons créé votre compte SOSPro24 gratuit avec cette adresse.\nOuvrez cette page et touchez « Choisir mon mot de passe » (valable 7 jours) :\n' || v_url || E'\n\nConnectez-vous ensuite sur https://sospro24.com avec cette adresse et votre nouveau mot de passe, et vérifiez votre profil et votre annonce. Vous pouvez les modifier ou les supprimer à tout moment.\n\nMerci,' || v_sign
+    when 'es' then 'Hola ' || v_name || E',\n\ncomo acordamos, hemos creado tu cuenta gratuita de SOSPro24 con esta dirección.\nAbre esta página y toca «Elegir mi contraseña» (vale 7 días):\n' || v_url || E'\n\nDespués inicia sesión en https://sospro24.com con este correo y tu nueva contraseña, y revisa tu perfil y tu anuncio. Puedes modificarlos o eliminarlos cuando quieras.\n\nGracias,' || v_sign
+    when 'de' then 'Hallo ' || v_name || E',\n\nwie besprochen haben wir Ihr kostenloses SOSPro24-Konto mit dieser Adresse erstellt.\nÖffnen Sie diese Seite und tippen Sie auf „Passwort festlegen“ (7 Tage gültig):\n' || v_url || E'\n\nMelden Sie sich danach auf https://sospro24.com mit dieser Adresse und Ihrem neuen Passwort an und prüfen Sie Profil und Anzeige. Sie können beides jederzeit ändern oder löschen.\n\nDanke,' || v_sign
+    else 'Ciao ' || v_name || E',\n\ncome d''accordo abbiamo creato il tuo account gratuito su SOSPro24 con questo indirizzo email.\nApri questa pagina e premi "Scegli la tua password" (vale 7 giorni):\n' || v_url || E'\n\nPoi accedi su https://sospro24.com con questa email e la nuova password, e controlla il tuo profilo e il tuo annuncio. Puoi modificarli o eliminarli quando vuoi.\n\nGrazie,' || v_sign end;
+  return private.send_mail(u.email, v_subj, v_text, v_lang, 'welcome', p_user, p_contact);
+end;
+$$;
+
+-- Crea un account già confermato e (se richiesto) gli manda l'email di benvenuto.
+-- Utile per l'iscrizione assistita dei professionisti.
 create or replace function public.admin_create_user(p_email text, p_name text, p_role text default 'pro',
                                                     p_country text default 'IT', p_city text default null,
                                                     p_lang text default 'it', p_welcome boolean default true,
@@ -827,10 +880,6 @@ declare
   v_email text := lower(btrim(coalesce(p_email, '')));
   v_user  jsonb;
   v_id    uuid;
-  v_link  jsonb;
-  v_url   text;
-  v_text  text;
-  v_subj  text;
   v_mail  jsonb;
   v_lang  text := case when p_lang in ('it', 'en', 'fr', 'es', 'de') then p_lang else 'it' end;
 begin
@@ -852,23 +901,8 @@ begin
     update private.contacts set user_id = v_id, status = 'consented' where id = p_contact;
   end if;
   if p_welcome then
-    v_link := private.auth_admin('POST', '/admin/generate_link', jsonb_build_object(
-      'type', 'recovery', 'email', v_email, 'redirect_to', private.setting('site_url') || '/'));
-    v_url := coalesce(v_link ->> 'action_link', v_link -> 'properties' ->> 'action_link');
-    v_subj := case v_lang
-      when 'en' then 'Your SOSPro24 account is ready'
-      when 'fr' then 'Votre compte SOSPro24 est prêt'
-      when 'es' then 'Tu cuenta de SOSPro24 está lista'
-      when 'de' then 'Ihr SOSPro24-Konto ist bereit'
-      else 'Il tuo account SOSPro24 è pronto' end;
-    v_text := case v_lang
-      when 'en' then 'Hello ' || btrim(p_name) || E',\n\nas agreed, we have created your free SOSPro24 account with this email address.\nChoose your password here (the link is valid for 24 hours):\n' || v_url || E'\n\nThen open https://sospro24.com, sign in and check your profile and ad. You can edit or delete them at any time.\n\nThank you,\nIkonet Solutions\nSOSPro24\n📞 Tel. / WhatsApp: +39 329 618 5600\n💬 https://wa.me/393296185600'
-      when 'fr' then 'Bonjour ' || btrim(p_name) || E',\n\ncomme convenu, nous avons créé votre compte SOSPro24 gratuit avec cette adresse.\nChoisissez votre mot de passe ici (lien valable 24 heures) :\n' || v_url || E'\n\nEnsuite, ouvrez https://sospro24.com, connectez-vous et vérifiez votre profil et votre annonce. Vous pouvez les modifier ou les supprimer à tout moment.\n\nMerci,\nIkonet Solutions\nSOSPro24\n📞 Tel. / WhatsApp: +39 329 618 5600\n💬 https://wa.me/393296185600'
-      when 'es' then 'Hola ' || btrim(p_name) || E',\n\ncomo acordamos, hemos creado tu cuenta gratuita de SOSPro24 con esta dirección.\nElige tu contraseña aquí (el enlace vale 24 horas):\n' || v_url || E'\n\nDespués abre https://sospro24.com, inicia sesión y revisa tu perfil y tu anuncio. Puedes modificarlos o eliminarlos cuando quieras.\n\nGracias,\nIkonet Solutions\nSOSPro24\n📞 Tel. / WhatsApp: +39 329 618 5600\n💬 https://wa.me/393296185600'
-      when 'de' then 'Hallo ' || btrim(p_name) || E',\n\nwie besprochen haben wir Ihr kostenloses SOSPro24-Konto mit dieser Adresse erstellt.\nLegen Sie hier Ihr Passwort fest (der Link gilt 24 Stunden):\n' || v_url || E'\n\nÖffnen Sie danach https://sospro24.com, melden Sie sich an und prüfen Sie Profil und Anzeige. Sie können beides jederzeit ändern oder löschen.\n\nDanke,\nIkonet Solutions\nSOSPro24\n📞 Tel. / WhatsApp: +39 329 618 5600\n💬 https://wa.me/393296185600'
-      else 'Ciao ' || btrim(p_name) || E',\n\ncome d''accordo abbiamo creato il tuo account gratuito su SOSPro24 con questo indirizzo email.\nScegli la tua password qui (il link vale 24 ore):\n' || v_url || E'\n\nPoi apri https://sospro24.com, accedi e controlla il tuo profilo e il tuo annuncio. Puoi modificarli o eliminarli quando vuoi.\n\nGrazie,\nIkonet Solutions\nSOSPro24\n📞 Tel. / WhatsApp: +39 329 618 5600\n💬 https://wa.me/393296185600' end;
     begin
-      v_mail := private.send_mail(v_email, v_subj, v_text, v_lang, 'welcome', v_id, p_contact);
+      v_mail := private.send_welcome(v_id, p_contact);
     exception when others then
       v_mail := jsonb_build_object('ok', false, 'error', sqlerrm);
     end;
@@ -877,6 +911,50 @@ begin
     end if;
   end if;
   return jsonb_build_object('id', v_id, 'email_sent', p_welcome);
+end;
+$$;
+
+-- Rimanda l'email di benvenuto (es. il link è scaduto o la persona non la trova)
+create or replace function public.admin_send_welcome(p_user uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform private.require_admin();
+  return private.send_welcome(p_user, (select id from private.contacts where user_id = p_user limit 1));
+end;
+$$;
+
+-- Chiamata dalla pagina sospro24.com/benvenuto.html quando la persona preme il pulsante:
+-- crea in quel momento il link monouso di Supabase per scegliere la password.
+create or replace function public.welcome_start(p_token text)
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  w     record;
+  v_link jsonb;
+begin
+  if p_token is null or p_token !~ '^[0-9a-f]{32}$' then
+    raise exception 'Link non valido';
+  end if;
+  select t.user_id, t.expires_at, a.email into w
+    from private.welcome_tokens t join auth.users a on a.id = t.user_id
+   where t.token = p_token;
+  if w.user_id is null then
+    raise exception 'Link non valido';
+  end if;
+  if w.expires_at < now() then
+    raise exception 'Link scaduto';
+  end if;
+  v_link := private.auth_admin('POST', '/admin/generate_link', jsonb_build_object(
+    'type', 'recovery', 'email', w.email, 'redirect_to', private.setting('site_url') || '/'));
+  update private.welcome_tokens set used_at = coalesce(used_at, now()) where token = p_token;
+  return coalesce(v_link ->> 'action_link', v_link -> 'properties' ->> 'action_link');
 end;
 $$;
 
@@ -1231,11 +1309,11 @@ begin
   for f in
     select p.oid::regprocedure as sig, p.proname
       from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-     where n.nspname = 'public' and (p.proname like 'admin\_%' or p.proname in ('is_admin', 'email_unsubscribe', 'invite_open'))
+     where n.nspname = 'public' and (p.proname like 'admin\_%' or p.proname in ('is_admin', 'email_unsubscribe', 'invite_open', 'welcome_start'))
   loop
     execute format('revoke all on function %s from public, anon', f.sig);
     execute format('grant execute on function %s to authenticated', f.sig);
-    if f.proname in ('email_unsubscribe', 'invite_open') then
+    if f.proname in ('email_unsubscribe', 'invite_open', 'welcome_start') then
       execute format('grant execute on function %s to anon', f.sig);
     end if;
   end loop;

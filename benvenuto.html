@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>SOSPro24 – Benvenuto</title>
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <style>
+      body{margin:0;font-family:Inter,system-ui,-apple-system,sans-serif;background:#0f172a;color:#0f172a;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:16px}
+      main{background:#fff;border-radius:20px;padding:28px;max-width:440px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+      .logo{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:22px;margin-bottom:14px}
+      .logo b{color:#2563eb}
+      .icon{width:40px;height:40px;border-radius:12px;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px}
+      h1{font-size:21px;margin:0 0 8px} p{color:#475569;margin:0 0 14px;line-height:1.55}
+      button{background:#2563eb;color:#fff;border:0;border-radius:12px;padding:14px 20px;font-weight:800;font-size:16px;cursor:pointer;width:100%}
+      button:disabled{opacity:.6} a{color:#2563eb}
+      .small{font-size:13px;margin-top:16px}
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="logo"><span class="icon">⚡</span><span>SOSPro<b>24</b></span></div>
+      <h1 id="title">…</h1>
+      <p id="text"></p>
+      <button id="btn" type="button" hidden></button>
+      <p class="small" id="help"></p>
+    </main>
+    <script type="module" src="/src/welcome.js"></script>
+  </body>
+</html>

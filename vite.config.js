@@ -13,7 +13,8 @@ export default defineConfig({
       input: {
         main: 'index.html',
         admin: 'admin.html',
-        unsubscribe: 'unsubscribe.html'
+        unsubscribe: 'unsubscribe.html',
+        benvenuto: 'benvenuto.html'
       }
     }
   }

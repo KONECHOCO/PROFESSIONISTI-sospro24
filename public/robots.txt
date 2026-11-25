@@ -2,5 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /admin.html
 Disallow: /unsubscribe.html
+Disallow: /benvenuto.html
 
 Sitemap: https://sospro24.com/sitemap.xml

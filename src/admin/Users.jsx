@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { UserPlus, Mail, Pencil, Ban, Trash2, RotateCcw, PlusCircle, RefreshCw } from 'lucide-react';
+import { UserPlus, Mail, Pencil, Ban, Trash2, RotateCcw, PlusCircle, RefreshCw, KeyRound } from 'lucide-react';
 import { Card, Btn, Badge, Modal, Field, Empty, inputCls, inputBase, fmtDate, matches } from './ui';
 import { COUNTRIES } from '../data';
 import EmailModal from './EmailModal';
@@ -28,6 +28,12 @@ export default function Users({ toast }) {
     const reason = window.prompt(u.banned ? `Sbloccare ${u.email}?` : `Bloccare ${u.email}? Non potrà più accedere e i suoi annunci verranno nascosti.\n\nMotivo (facoltativo):`, '');
     if (reason === null) return;
     try { await api.setBanned(u.id, !u.banned, reason); toast(u.banned ? 'Account sbloccato' : 'Account bloccato'); load(); } catch (e) { toast(e.message, 'error'); }
+  };
+
+  // Nuova email di benvenuto con il link (pagina benvenuto.html, valida 7 giorni) per scegliere la password
+  const resendWelcome = async (u) => {
+    if (!window.confirm(`Mandare a ${u.email} una nuova email di benvenuto con il link per scegliere la password?`)) return;
+    try { await api.sendWelcome(u.id); toast('Email di benvenuto inviata'); } catch (e) { toast(e.message, 'error'); }
   };
 
   const del = async (u) => {
@@ -82,6 +88,7 @@ export default function Users({ toast }) {
                       <div className="flex flex-wrap justify-end gap-1">
                         <Btn size="sm" variant="ghost" onClick={() => setMailTo([u])} disabled={u.opted_out} title="Invia email"><Mail className="w-3.5 h-3.5" /></Btn>
                         <Btn size="sm" variant="ghost" onClick={() => setEdit(u)} title="Modifica"><Pencil className="w-3.5 h-3.5" /></Btn>
+                        {!u.is_admin && <Btn size="sm" variant="ghost" onClick={() => resendWelcome(u)} title="Reinvia benvenuto (link per scegliere la password)"><KeyRound className="w-3.5 h-3.5" /></Btn>}
                         {u.role === 'pro' && <Btn size="sm" variant="ghost" onClick={() => setListingFor(u)} title="Crea annuncio per questo account"><PlusCircle className="w-3.5 h-3.5" /></Btn>}
                         {!u.is_admin && <Btn size="sm" variant={u.banned ? 'ok' : 'warn'} onClick={() => ban(u)} title={u.banned ? 'Sblocca' : 'Blocca'}>{u.banned ? <RotateCcw className="w-3.5 h-3.5" /> : <Ban className="w-3.5 h-3.5" />}</Btn>}
                         {!u.is_admin && <Btn size="sm" variant="danger" onClick={() => del(u)} title="Elimina"><Trash2 className="w-3.5 h-3.5" /></Btn>}
