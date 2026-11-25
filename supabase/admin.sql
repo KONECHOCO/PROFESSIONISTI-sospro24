@@ -134,6 +134,16 @@ begin
   if p_value = '' then
     raise exception 'Valore vuoto';
   end if;
+  -- Errori frequenti: chiave pubblica al posto di quella segreta
+  if p_name = 'sospro_service_key' and (p_value like 'sb\_publishable\_%' or p_value like 'sb\_anon%') then
+    raise exception 'Questa è la chiave PUBBLICA (publishable): serve la chiave SEGRETA che inizia con sb_secret_ (Supabase → Project Settings → API Keys → Secret keys)';
+  end if;
+  if p_name = 'sospro_service_key' and p_value not like 'sb\_secret\_%' and p_value not like 'eyJ%' then
+    raise exception 'Chiave non riconosciuta: deve iniziare con sb_secret_ (oppure essere la vecchia service_role eyJ…)';
+  end if;
+  if p_name = 'sospro_sendgrid_key' and p_value not like 'SG.%' then
+    raise exception 'La chiave SendGrid deve iniziare con SG.';
+  end if;
   select id into v_id from vault.secrets where name = p_name;
   if v_id is null then
     perform vault.create_secret(p_value, p_name);
@@ -232,7 +242,12 @@ begin
     raise exception 'Manca la chiave di servizio Supabase: pannello → Impostazioni';
   end if;
   res := private.http_json(p_method, private.setting('project_url') || '/auth/v1' || p_path,
-           jsonb_build_object('apikey', v_key, 'Authorization', 'Bearer ' || v_key), p_body);
+           -- Chiavi nuove (sb_secret_…): solo nell'intestazione apikey, Supabase crea da sé il token.
+           -- Chiavi vecchie (service_role, JWT "eyJ…"): anche come Authorization: Bearer.
+           case when v_key like 'sb\_%'
+                then jsonb_build_object('apikey', v_key)
+                else jsonb_build_object('apikey', v_key, 'Authorization', 'Bearer ' || v_key) end,
+           p_body);
   if (res ->> 'status')::int >= 300 then
     raise exception 'Supabase Auth %: %', res ->> 'status',
       left(coalesce(res -> 'body' ->> 'msg', res -> 'body' ->> 'message', res -> 'body' ->> 'error_description', res ->> 'body'), 200);
