@@ -3,15 +3,16 @@
 import React, { useMemo, useState } from 'react';
 import { Send, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Modal, Btn, Field, inputCls } from './ui';
-import { TEMPLATES } from './templates';
+import { TEMPLATES, localizeVar } from './templates';
 import * as api from './api';
 
 const LANGS = [['it', 'Italiano'], ['fr', 'Français'], ['en', 'English'], ['es', 'Español'], ['de', 'Deutsch']];
 
-// {link}: link personale del contatto (sospro24.com/?inv=…) per sapere chi apre l'invito; per gli altri il sito
-const fill = (s, r) => s
+// {link}: link personale del contatto (sospro24.com/?inv=…) per sapere chi apre l'invito; per gli altri il sito.
+// {categoria} e {citta} vengono tradotte nella lingua dell'email (es. "idraulici" → "fontaneros").
+const fill = (s, r, lang = 'it') => s
   .replace(/\{link\}/g, r.link || 'https://sospro24.com')
-  .replace(/\{(nome|categoria|citta)\}/g, (_, k) => (r[k] || '').trim() || '…');
+  .replace(/\{(nome|categoria|citta)\}/g, (_, k) => localizeVar(k, r[k], lang) || '…');
 
 export default function EmailModal({ recipients, defaultTemplate = 'free', onClose, onSent }) {
   const forContacts = recipients.some((r) => r.contactId);
@@ -28,8 +29,9 @@ export default function EmailModal({ recipients, defaultTemplate = 'free', onClo
 
   const variant = (id, l) => {
     const t = TEMPLATES.find((x) => x.id === id);
-    const v = t.text[l] || t.text.it;
-    return single ? { subject: fill(v.subject, valid[0]), body: fill(v.body, valid[0]) } : v;
+    const usedLang = t.text[l] ? l : 'it';
+    const v = t.text[usedLang];
+    return single ? { subject: fill(v.subject, valid[0], usedLang), body: fill(v.body, valid[0], usedLang) } : v;
   };
   const [tpl, setTpl] = useState(startTpl.id);
   const [lang, setLang] = useState(startLang);
@@ -67,7 +69,7 @@ export default function EmailModal({ recipients, defaultTemplate = 'free', onClo
     for (const r of targets) {
       try {
         await api.sendEmail({
-          to: r.email, subject: fill(subject, r), text: fill(body, r), lang,
+          to: r.email, subject: fill(subject, r, lang), text: fill(body, r, lang), lang,
           kind: tpl, userId: r.userId, contactId: r.contactId,
         });
         out.push({ email: r.email, ok: true });
@@ -110,7 +112,7 @@ export default function EmailModal({ recipients, defaultTemplate = 'free', onClo
           </Field>
           {single && (preview.nome || preview.categoria || preview.citta) && (
             <p className="text-xs text-slate-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
-              Dati presi dal contatto: <b>{preview.nome || '—'}</b> · {preview.categoria || 'categoria mancante'} · {preview.citta || 'città mancante'}
+              Dati presi dal contatto: <b>{preview.nome || '—'}</b> · {localizeVar('categoria', preview.categoria, lang) || 'categoria mancante'} · {localizeVar('citta', preview.citta, lang) || 'città mancante'}
               {(!preview.categoria || !preview.citta || !preview.nome) && <span className="text-amber-800"> — dove manca un dato compare "…": correggilo nel testo.</span>}
             </p>
           )}
@@ -124,13 +126,13 @@ export default function EmailModal({ recipients, defaultTemplate = 'free', onClo
               <summary className="cursor-pointer font-semibold text-slate-700">Anteprima e dati di ogni destinatario</summary>
               <ul className="mt-2 text-xs space-y-0.5 max-h-32 overflow-y-auto">
                 {valid.map((r) => (
-                  <li key={r.email}><b>{r.nome || '—'}</b> · {r.categoria || <span className="text-amber-700">categoria mancante</span>} · {r.citta || <span className="text-amber-700">città mancante</span>} · <span className="text-slate-500">{r.email}</span></li>
+                  <li key={r.email}><b>{r.nome || '—'}</b> · {localizeVar('categoria', r.categoria, lang) || <span className="text-amber-700">categoria mancante</span>} · {localizeVar('citta', r.citta, lang) || <span className="text-amber-700">città mancante</span>} · <span className="text-slate-500">{r.email}</span></li>
                 ))}
               </ul>
               <div className="mt-2 p-3 rounded-lg bg-slate-50 border border-slate-200 whitespace-pre-wrap text-[13px]">
                 <div className="text-[11px] text-slate-500 mb-1">Come la riceve {preview.nome || preview.email}:</div>
-                <div className="font-bold mb-2">{fill(subject, preview)}</div>
-                {fill(body, preview)}
+                <div className="font-bold mb-2">{fill(subject, preview, lang)}</div>
+                {fill(body, preview, lang)}
               </div>
             </details>
           )}

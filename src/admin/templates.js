@@ -24,6 +24,14 @@ SOSPro24
 SOSPro24
 📞 Phone & WhatsApp: ${PHONE}
 💬 Message us on WhatsApp: ${WHATSAPP}`,
+  es: `Ikonet Solutions
+SOSPro24
+📞 Teléfono y WhatsApp: ${PHONE}
+💬 Escríbenos por WhatsApp: ${WHATSAPP}`,
+  de: `Ikonet Solutions
+SOSPro24
+📞 Telefon & WhatsApp: ${PHONE}
+💬 Schreiben Sie uns auf WhatsApp: ${WHATSAPP}`,
 };
 
 const appLines = {
@@ -36,7 +44,44 @@ const appLines = {
   en: `📱 Download the SOSPro24 app:
 - iPhone: ${APP_IOS}
 - Android: ${APP_ANDROID || 'coming soon to Google Play; meanwhile everything works at https://sospro24.com'}`,
+  es: `📱 Descarga la app SOSPro24:
+- iPhone: ${APP_IOS}
+- Android: ${APP_ANDROID || 'próximamente en Google Play; mientras tanto todo funciona en https://sospro24.com'}`,
+  de: `📱 Laden Sie die SOSPro24-App herunter:
+- iPhone: ${APP_IOS}
+- Android: ${APP_ANDROID || 'bald bei Google Play; bis dahin funktioniert alles auf https://sospro24.com'}`,
 };
+
+// Categoria e città dei contatti sono scritte in italiano (dai file PagineGialle e dalle ricerche):
+// nelle email in altre lingue vengono tradotte, es. "idraulici" → "fontaneros", "Parigi" → "Paris".
+const CATEGORY_WORDS = [
+  [/idraulic|plumb/i, { it: 'idraulici', en: 'plumbers', fr: 'plombiers', es: 'fontaneros', de: 'Klempner' }],
+  [/elettric|electric/i, { it: 'elettricisti', en: 'electricians', fr: 'électriciens', es: 'electricistas', de: 'Elektriker' }],
+  [/fabbr|apertura porte|locksmith/i, { it: 'fabbri e apertura porte', en: 'locksmiths', fr: 'serruriers', es: 'cerrajeros', de: 'Schlüsseldienste' }],
+  [/informatic|IT repair|computer/i, { it: 'assistenza informatica', en: 'IT repair services', fr: 'dépannage informatique', es: 'servicio técnico informático', de: 'IT-Service und Computerreparatur' }],
+  [/pulizi|cleaning/i, { it: 'imprese di pulizia', en: 'cleaning services', fr: 'entreprises de nettoyage', es: 'empresas de limpieza', de: 'Reinigungsfirmen' }],
+];
+const CITY_NAMES = {
+  parigi: { fr: 'Paris', en: 'Paris', es: 'París', de: 'Paris' },
+  berlino: { de: 'Berlin', en: 'Berlin', fr: 'Berlin', es: 'Berlín' },
+  londra: { en: 'London', fr: 'Londres', es: 'Londres', de: 'London' },
+  zurigo: { de: 'Zürich', en: 'Zurich', fr: 'Zurich', es: 'Zúrich' },
+  ginevra: { fr: 'Genève', en: 'Geneva', es: 'Ginebra', de: 'Genf' },
+  monaco: { de: 'München', en: 'Munich', fr: 'Munich', es: 'Múnich' },
+  roma: { en: 'Rome', fr: 'Rome', es: 'Roma', de: 'Rom' },
+  milano: { en: 'Milan', fr: 'Milan', es: 'Milán', de: 'Mailand' },
+};
+
+export function localizeVar(key, value, lang) {
+  const v = String(value || '').trim();
+  if (!v) return v;
+  if (key === 'categoria') {
+    const hit = CATEGORY_WORDS.find(([re]) => re.test(v));
+    return hit ? hit[1][lang] || v : v;
+  }
+  if (key === 'citta' && lang !== 'it') return CITY_NAMES[v.toLowerCase()]?.[lang] || v;
+  return v;
+}
 
 export const TEMPLATES = [
   {
@@ -107,6 +152,48 @@ If not, simply ignore this email: I won't write again.
 Thank you,
 ${signature.en}`,
       },
+      es: {
+        subject: 'Un anuncio gratuito en SOSPro24 para {nome}',
+        body: `Buenos días:
+
+soy el fundador de Ikonet Solutions y he creado SOSPro24 ({link}), una web y una app que ayudan a las personas a encontrar profesionales en su zona, también para urgencias.
+
+He encontrado {nome} buscando {categoria} en {citta} y les escribo porque estamos abriendo esta categoría en su ciudad.
+
+- El perfil y el anuncio son gratuitos.
+- El cliente les contacta directamente por teléfono o WhatsApp: SOSPro24 no cobra comisiones sobre su trabajo.
+- En la sección «Solicitudes» también encontrarán clientes que escriben lo que buscan, por ejemplo «Busco un fontanero en la zona».
+
+${appLines.es}
+
+Si les interesa, puedo crear yo el perfil en pocos minutos: me basta una respuesta con la zona que cubren, los servicios, el horario y un número de teléfono para mostrar. Antes de publicarlo les envío el texto para que lo aprueben, y pueden modificarlo o eliminarlo cuando quieran.
+
+Si no les interesa, basta con ignorar este correo: no volveré a escribirles.
+
+Gracias y buen trabajo,
+${signature.es}`,
+      },
+      de: {
+        subject: 'Eine kostenlose Anzeige auf SOSPro24 für {nome}',
+        body: `Guten Tag,
+
+ich bin der Gründer von Ikonet Solutions und habe SOSPro24 ({link}) entwickelt – eine Website und App, mit der Menschen Fachleute in ihrer Nähe finden, auch im Notfall.
+
+Ich habe {nome} bei der Suche nach {categoria} in {citta} gefunden und schreibe Ihnen, weil wir diese Kategorie gerade in Ihrer Stadt eröffnen.
+
+- Profil und Anzeige sind kostenlos.
+- Kunden kontaktieren Sie direkt per Telefon oder WhatsApp: SOSPro24 nimmt keine Provision auf Ihre Arbeit.
+- Im Bereich „Gesuche“ finden Sie außerdem Kunden, die beschreiben, was sie brauchen.
+
+${appLines.de}
+
+Wenn Sie Interesse haben, erstelle ich Ihr Profil in wenigen Minuten: Antworten Sie einfach mit Einsatzgebiet, Leistungen, Öffnungszeiten und einer Telefonnummer, die angezeigt werden soll. Vor der Veröffentlichung schicke ich Ihnen den Text zur Freigabe, und Sie können ihn jederzeit ändern oder löschen.
+
+Falls kein Interesse besteht, ignorieren Sie diese E-Mail einfach: Ich schreibe Ihnen nicht noch einmal.
+
+Vielen Dank und gute Arbeit,
+${signature.de}`,
+      },
     },
   },
   {
@@ -126,6 +213,58 @@ ${appLines.it}
 
 Grazie,
 ${signature.it}`,
+      },
+      fr: {
+        subject: 'Le profil de {nome} est en ligne sur SOSPro24',
+        body: `Bonjour,
+
+comme convenu, votre profil est maintenant publié sur SOSPro24 : {link}
+
+Les clients de {citta} qui cherchent des {categoria} peuvent vous trouver et vous contacter directement. Pour modifier quelque chose (texte, horaires, téléphone), répondez simplement à cet e-mail et je m'en occupe tout de suite.
+
+${appLines.fr}
+
+Merci,
+${signature.fr}`,
+      },
+      en: {
+        subject: "{nome}'s profile is live on SOSPro24",
+        body: `Hello,
+
+as agreed, your profile is now published on SOSPro24: {link}
+
+Customers in {citta} looking for {categoria} can find you and contact you directly. If you want to change anything (text, opening hours, phone), just reply to this email and I'll fix it right away.
+
+${appLines.en}
+
+Thank you,
+${signature.en}`,
+      },
+      es: {
+        subject: 'El perfil de {nome} ya está en SOSPro24',
+        body: `Buenos días:
+
+como acordamos, su perfil ya está publicado en SOSPro24: {link}
+
+Los clientes de {citta} que buscan {categoria} pueden encontrarles y contactarles directamente. Si quieren cambiar algo (texto, horario, teléfono), respondan a este correo y lo arreglo enseguida.
+
+${appLines.es}
+
+Gracias,
+${signature.es}`,
+      },
+      de: {
+        subject: 'Das Profil von {nome} ist jetzt auf SOSPro24 online',
+        body: `Guten Tag,
+
+wie besprochen ist Ihr Profil jetzt auf SOSPro24 veröffentlicht: {link}
+
+Kunden in {citta}, die {categoria} suchen, können Sie finden und direkt kontaktieren. Wenn Sie etwas ändern möchten (Text, Öffnungszeiten, Telefon), antworten Sie einfach auf diese E-Mail – ich kümmere mich sofort darum.
+
+${appLines.de}
+
+Vielen Dank,
+${signature.de}`,
       },
     },
   },
