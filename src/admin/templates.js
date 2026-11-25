@@ -48,7 +48,7 @@ export const TEMPLATES = [
         subject: 'Un annuncio gratuito su SOSPro24 per {nome}',
         body: `Buongiorno,
 
-sono fondatore di Ikonet Solutions e ho creato SOSPro24 (https://sospro24.com), un sito e un'app che aiutano le persone a trovare professionisti nella propria zona, anche per le urgenze.
+sono fondatore di Ikonet Solutions e ho creato SOSPro24 ({link}), un sito e un'app che aiutano le persone a trovare professionisti nella propria zona, anche per le urgenze.
 
 Ho trovato {nome} cercando {categoria} a {citta} e vi scrivo perché stiamo aprendo questa categoria nella vostra città.
 
@@ -69,7 +69,7 @@ ${signature.it}`,
         subject: 'Une annonce gratuite sur SOSPro24 pour {nome}',
         body: `Bonjour,
 
-je suis le fondateur d'Ikonet Solutions et j'ai créé SOSPro24 (https://sospro24.com), un site et une application qui aident les gens à trouver des professionnels près de chez eux, y compris en urgence.
+je suis le fondateur d'Ikonet Solutions et j'ai créé SOSPro24 ({link}), un site et une application qui aident les gens à trouver des professionnels près de chez eux, y compris en urgence.
 
 J'ai trouvé {nome} en cherchant {categoria} à {citta} et je vous écris car nous ouvrons cette catégorie dans votre ville.
 
@@ -90,7 +90,7 @@ ${signature.fr}`,
         subject: 'A free listing on SOSPro24 for {nome}',
         body: `Hello,
 
-I'm the founder of Ikonet Solutions and I created SOSPro24 (https://sospro24.com), a website and app that helps people find local professionals, including for emergencies.
+I'm the founder of Ikonet Solutions and I created SOSPro24 ({link}), a website and app that helps people find local professionals, including for emergencies.
 
 I found {nome} while looking for {categoria} in {citta} and I'm writing because we are opening this category in your city.
 
@@ -118,7 +118,7 @@ ${signature.en}`,
         subject: 'Il profilo di {nome} è online su SOSPro24',
         body: `Buongiorno,
 
-come concordato il vostro profilo è ora pubblicato su SOSPro24: https://sospro24.com
+come concordato il vostro profilo è ora pubblicato su SOSPro24: {link}
 
 I clienti di {citta} che cercano {categoria} possono trovarvi e contattarvi direttamente. Se volete cambiare qualcosa (testo, orari, telefono) rispondete a questa email e lo sistemo subito.
 
@@ -160,6 +160,7 @@ Il team di SOSPro24
 export function fillTemplate(templateId, lang, vars) {
   const t = TEMPLATES.find((x) => x.id === templateId) || TEMPLATES[TEMPLATES.length - 1];
   const variant = t.text[lang] || t.text.it;
-  const fill = (s) => s.replace(/\{(nome|categoria|citta)\}/g, (_, k) => (vars[k] || '').trim() || '…');
+  const fill = (s) => s.replace(/\{link\}/g, vars.link || 'https://sospro24.com')
+    .replace(/\{(nome|categoria|citta)\}/g, (_, k) => (vars[k] || '').trim() || '…');
   return { subject: fill(variant.subject), body: fill(variant.body), lang: t.text[lang] ? lang : 'it' };
 }

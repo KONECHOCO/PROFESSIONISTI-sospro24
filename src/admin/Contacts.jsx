@@ -1,7 +1,7 @@
 // Contatti da invitare (es. professionisti trovati su PagineGialle o siti ufficiali):
 // importazione da CSV, invio dell'invito con un click, stato di ogni contatto.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Upload, Mail, UserPlus, Trash2, RefreshCw, ExternalLink, Phone } from 'lucide-react';
+import { Upload, Mail, UserPlus, Trash2, RefreshCw, ExternalLink, Phone, Plus, Eye } from 'lucide-react';
 import { Card, Btn, Badge, Empty, Modal, Field, inputCls, inputBase, fmtDay, matches } from './ui';
 import EmailModal from './EmailModal';
 import { CreateUserModal } from './Users';
@@ -29,21 +29,30 @@ export default function Contacts({ toast }) {
   const [accountFor, setAccountFor] = useState(null);
   const [edit, setEdit] = useState(null);
   const [importing, setImporting] = useState(null);
+  const [creating, setCreating] = useState(false);
   const fileRef = useRef(null);
 
   const load = () => api.listContacts().then(setRows).catch((e) => toast(e.message, 'error'));
   useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const cities = useMemo(() => [...new Set((rows || []).map((c) => c.city).filter(Boolean))].sort(), [rows]);
-  const list = useMemo(() => (rows || []).filter((c) => (status === 'all' || c.status === status) && (city === 'all' || c.city === city)
+  const list = useMemo(() => (rows || []).filter((c) => (status === 'all' || (status === 'opened' ? c.clicks > 0 : c.status === status))
+    && (city === 'all' || c.city === city)
     && matches(q, c.business_name, c.category, c.city, c.email, c.notes)), [rows, q, status, city]);
   const counts = useMemo(() => (rows || []).reduce((a, c) => ({ ...a, [c.status]: (a[c.status] || 0) + 1 }), {}), [rows]);
+  const opened = useMemo(() => (rows || []).filter((c) => c.clicks > 0).length, [rows]);
 
   const toggle = (id) => setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const allSelected = list.length > 0 && list.every((c) => selected.has(c.id));
   const selectedRows = (rows || []).filter((c) => selected.has(c.id));
 
-  const toRecipient = (c) => ({ email: c.email, nome: c.business_name, categoria: c.category, citta: c.city, lang: c.lang, contactId: c.id, optedOut: c.status === 'optout' || c.status === 'bounced' });
+  const toRecipient = (c) => ({
+    email: c.email, nome: c.business_name, categoria: c.category, citta: c.city, lang: c.lang, contactId: c.id,
+    optedOut: c.status === 'optout' || c.status === 'bounced',
+    emailsSent: c.emails_sent || 0,
+    // Link personale: quando lo apre, il pannello segna "ha aperto l'invito" e arriva un messaggio su Telegram
+    link: c.token ? `https://sospro24.com/?inv=${c.token}` : undefined,
+  });
 
   const onFile = async (e) => {
     const file = e.target.files?.[0];
@@ -70,6 +79,7 @@ export default function Contacts({ toast }) {
         title={`Contatti da invitare${rows ? ` (${rows.length})` : ''}`}
         actions={<>
           <input ref={fileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={onFile} />
+          <Btn onClick={() => setCreating(true)}><Plus className="w-4 h-4" /> Nuovo contatto</Btn>
           <Btn variant="ghost" onClick={() => fileRef.current?.click()}><Upload className="w-4 h-4" /> Importa CSV</Btn>
           <Btn variant="ghost" onClick={load} aria-label="Aggiorna"><RefreshCw className="w-4 h-4" /></Btn>
         </>}
@@ -80,6 +90,11 @@ export default function Contacts({ toast }) {
               <Badge color={color}>{label}: {counts[k]}</Badge>
             </button>
           ) : null)}
+          {opened > 0 && (
+            <button type="button" onClick={() => setStatus(status === 'opened' ? 'all' : 'opened')} className={status === 'opened' ? 'ring-2 ring-blue-500 rounded' : ''}>
+              <Badge color="green">👀 hanno aperto l'invito: {opened}</Badge>
+            </button>
+          )}
         </div>
         <div className="flex flex-wrap gap-2 mb-3">
           <input className={`${inputBase} w-56`} placeholder="Cerca nome, categoria, email…" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -89,6 +104,7 @@ export default function Contacts({ toast }) {
           </select>
           <select className={`${inputBase} w-44`} value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="all">Tutti gli stati</option>
+            <option value="opened">👀 hanno aperto l'invito</option>
             {Object.entries(CONTACT_STATUS).map(([k, [l]]) => <option key={k} value={k}>{l}</option>)}
           </select>
           {selected.size > 0 && (
@@ -133,6 +149,11 @@ export default function Contacts({ toast }) {
                       <td className="px-2 py-2.5 text-xs">
                         <Badge color={color}>{label}</Badge>
                         {c.emails_sent > 0 && <div className="text-slate-500 mt-1">{c.emails_sent} email · {fmtDay(c.last_contacted)}</div>}
+                        {c.clicks > 0 && (
+                          <div className="mt-1 inline-flex items-center gap-1 text-emerald-700 font-semibold" title={`Prima apertura ${fmtDay(c.first_click)}, ultima ${fmtDay(c.last_click)}`}>
+                            <Eye className="w-3.5 h-3.5" /> ha aperto l'invito{c.clicks > 1 ? ` (${c.clicks} volte)` : ''} · {fmtDay(c.last_click)}
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-2.5">
                         <div className="flex flex-wrap justify-end gap-1">
@@ -171,6 +192,7 @@ export default function Contacts({ toast }) {
       )}
 
       {edit && <EditContactModal contact={edit} onClose={() => setEdit(null)} onSaved={() => { setEdit(null); load(); }} toast={toast} />}
+      {creating && <NewContactModal onClose={() => setCreating(false)} onSaved={() => { setCreating(false); load(); }} toast={toast} />}
       {mailTo && <EmailModal recipients={mailTo} defaultTemplate="invite" onClose={() => setMailTo(null)} onSent={() => { setSelected(new Set()); load(); }} />}
       {accountFor && (
         <CreateUserModal
@@ -181,6 +203,51 @@ export default function Contacts({ toast }) {
         />
       )}
     </>
+  );
+}
+
+// Inserimento a mano di un contatto (es. trovato su un gruppo Facebook o di persona)
+const COUNTRY_LANG = { IT: 'it', FR: 'fr', GB: 'en', ES: 'es', DE: 'de', CH: 'de' };
+function NewContactModal({ onClose, onSaved, toast }) {
+  const [f, setF] = useState({ business_name: '', category: '', city: '', country: 'IT', email: '', phone: '', website: '', notes: '', lang: 'it' });
+  const [busy, setBusy] = useState(false);
+  const set = (k) => (e) => setF({ ...f, [k]: e.target.value, ...(k === 'country' ? { lang: COUNTRY_LANG[e.target.value] || 'it' } : {}) });
+  const emailOk = !f.email.trim() || /^\S+@\S+\.\S+$/.test(f.email.trim());
+  const save = async () => {
+    setBusy(true);
+    try {
+      const r = await api.importContacts([{ ...f, business_name: f.business_name.trim(), email: f.email.trim(), source: f.website.trim() }]);
+      if (r.added) { toast('Contatto aggiunto'); onSaved(); } else { toast('Contatto già presente (stessa email, o stesso nome nella stessa città)', 'error'); setBusy(false); }
+    } catch (e) { toast(e.message, 'error'); setBusy(false); }
+  };
+  return (
+    <Modal title="Nuovo contatto" onClose={onClose} wide>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Field label="Attività / nome *"><input className={inputCls} value={f.business_name} onChange={set('business_name')} maxLength={160} autoFocus /></Field>
+        <Field label="Categoria" hint="Es. idraulici, elettricisti, imprese di pulizia: finisce nell'invito ({categoria})"><input className={inputCls} value={f.category} onChange={set('category')} maxLength={80} /></Field>
+        <Field label="Città"><input className={inputCls} value={f.city} onChange={set('city')} maxLength={80} /></Field>
+        <Field label="Paese">
+          <select className={inputCls} value={f.country} onChange={set('country')}>
+            {[['IT', 'Italia'], ['FR', 'Francia'], ['ES', 'Spagna'], ['GB', 'Regno Unito'], ['DE', 'Germania'], ['CH', 'Svizzera']].map(([c, n]) => <option key={c} value={c}>{n}</option>)}
+          </select>
+        </Field>
+        <Field label="Email" hint={emailOk ? 'Solo email pubbliche dell\'attività' : 'Email non valida'}><input type="email" className={inputCls} value={f.email} onChange={set('email')} /></Field>
+        <Field label="Telefono"><input className={inputCls} value={f.phone} onChange={set('phone')} /></Field>
+        <Field label="Sito o pagina dove l'hai trovato"><input className={inputCls} value={f.website} onChange={set('website')} placeholder="https://…" /></Field>
+        <Field label="Lingua delle email">
+          <select className={inputCls} value={f.lang} onChange={set('lang')}>
+            <option value="it">Italiano</option><option value="fr">Français</option><option value="en">English</option>
+          </select>
+        </Field>
+      </div>
+      <div className="mt-3">
+        <Field label="Note"><textarea className={inputCls} rows={2} value={f.notes} onChange={set('notes')} /></Field>
+      </div>
+      <div className="mt-5 flex justify-end gap-2">
+        <Btn variant="ghost" onClick={onClose}>Annulla</Btn>
+        <Btn onClick={save} disabled={busy || !f.business_name.trim() || !emailOk}><Plus className="w-4 h-4" /> {busy ? 'Salvo…' : 'Aggiungi'}</Btn>
+      </div>
+    </Modal>
   );
 }
 

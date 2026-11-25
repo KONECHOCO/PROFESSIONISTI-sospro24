@@ -392,6 +392,40 @@ create table if not exists private.contacts (
 create unique index if not exists contacts_email_uidx on private.contacts (lower(email)) where email is not null and email <> '';
 create unique index if not exists contacts_name_city_uidx on private.contacts (lower(business_name), lower(city));
 
+-- Link personale dell'invito (sospro24.com/?inv=<token>): sappiamo chi apre l'invito senza pixel nascosti
+alter table private.contacts add column if not exists token text;
+alter table private.contacts add column if not exists clicks int not null default 0;
+alter table private.contacts add column if not exists first_click timestamptz;
+alter table private.contacts add column if not exists last_click timestamptz;
+update private.contacts set token = encode(extensions.gen_random_bytes(9), 'hex') where token is null;
+alter table private.contacts alter column token set default encode(extensions.gen_random_bytes(9), 'hex');
+create unique index if not exists contacts_token_uidx on private.contacts (token);
+
+-- Chiamata dal sito quando qualcuno apre il link dell'invito (anche senza account)
+create or replace function public.invite_open(p_token text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  c record;
+begin
+  if p_token is null or p_token !~ '^[0-9a-f]{12,40}$' then
+    return;
+  end if;
+  update private.contacts
+     set clicks = clicks + 1, first_click = coalesce(first_click, now()), last_click = now()
+   where token = p_token
+  returning business_name, city, category, clicks into c;
+  if found and c.clicks = 1 then
+    perform private.tg_send('👀 <b>Ha aperto l''invito</b>: ' || private.h(c.business_name)
+      || coalesce(' · ' || private.h(nullif(c.category, '')), '') || coalesce(' · ' || private.h(nullif(c.city, '')), '')
+      || E'\n' || private.setting('site_url') || '/admin.html#contacts');
+  end if;
+end;
+$$;
+
 create or replace function private.unsub_token(p_email text)
 returns text
 language sql
@@ -675,6 +709,7 @@ as $$
     'reviews',          (select count(*) from public.reviews),
     'contacts',         (select count(*) from private.contacts),
     'contacts_invited', (select count(*) from private.contacts where status <> 'new'),
+    'contacts_opened',  (select count(*) from private.contacts where clicks > 0),
     'unconfirmed',      (select count(*) from auth.users where email_confirmed_at is null)
   );
 $$;
@@ -1123,7 +1158,8 @@ begin
     || '<b>Totale</b>: ' || (t ->> 'users') || ' utenti (' || (t ->> 'pros') || ' professionisti) · '
     || (t ->> 'listings_active') || ' annunci attivi · ' || (t ->> 'requests_active') || ' richieste aperte'
     || case when (t ->> 'reports_open')::int > 0 then E'\n⚠️ Segnalazioni da gestire: <b>' || (t ->> 'reports_open') || '</b>' else '' end
-    || case when (t ->> 'contacts')::int > 0 then E'\n📇 Contatti invitati: ' || (t ->> 'contacts_invited') || ' su ' || (t ->> 'contacts') else '' end
+    || case when (t ->> 'contacts')::int > 0 then E'\n📇 Contatti invitati: ' || (t ->> 'contacts_invited') || ' su ' || (t ->> 'contacts')
+         || ' · hanno aperto l''invito: ' || (t ->> 'contacts_opened') else '' end
     || E'\n\n' || private.setting('site_url') || '/admin.html';
 end;
 $$;
@@ -1180,11 +1216,11 @@ begin
   for f in
     select p.oid::regprocedure as sig, p.proname
       from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-     where n.nspname = 'public' and (p.proname like 'admin\_%' or p.proname in ('is_admin', 'email_unsubscribe'))
+     where n.nspname = 'public' and (p.proname like 'admin\_%' or p.proname in ('is_admin', 'email_unsubscribe', 'invite_open'))
   loop
     execute format('revoke all on function %s from public, anon', f.sig);
     execute format('grant execute on function %s to authenticated', f.sig);
-    if f.proname = 'email_unsubscribe' then
+    if f.proname in ('email_unsubscribe', 'invite_open') then
       execute format('grant execute on function %s to anon', f.sig);
     end if;
   end loop;

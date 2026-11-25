@@ -27,7 +27,7 @@ export default function Dashboard({ toast, go }) {
         <Stat label="Segnalazioni da gestire" value={t.reports_open} color={t.reports_open ? 'text-rose-600' : 'text-slate-900'} sub={t.reports_open ? <button type="button" className="text-rose-700 underline" onClick={() => go('reports')}>Gestisci</button> : 'tutto in ordine'} />
         <Stat label="Lista d'attesa" value={t.waitlist} />
         <Stat label="Recensioni" value={t.reviews} />
-        <Stat label="Contatti invitati" value={`${t.contacts_invited}/${t.contacts}`} sub={<button type="button" className="text-blue-700 underline" onClick={() => go('contacts')}>Apri contatti</button>} />
+        <Stat label="Contatti invitati" value={`${t.contacts_invited}/${t.contacts}`} sub={<>👀 {t.contacts_opened ?? 0} hanno aperto l'invito · <button type="button" className="text-blue-700 underline" onClick={() => go('contacts')}>Apri</button></>} />
         <Stat label="Email da confermare" value={t.unconfirmed} sub="account che non hanno cliccato il link" />
       </div>
 

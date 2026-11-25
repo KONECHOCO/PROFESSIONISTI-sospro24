@@ -38,6 +38,16 @@ const sharedAdId = startParams.get('ad');
 const sharedRequestId = startParams.get('req');
 const startView = sharedRequestId || startParams.get('view') === 'requests' ? 'requests' : 'pros';
 
+// https://sospro24.com/?inv=<codice>: link personale delle email d'invito ai professionisti.
+// Segnala al pannello amministratore che l'invito è stato aperto, poi toglie il codice dall'indirizzo.
+const inviteToken = startParams.get('inv');
+if (inviteToken && /^[0-9a-f]{12,40}$/.test(inviteToken)) {
+  supabase?.rpc('invite_open', { p_token: inviteToken }).then(() => {}, () => {});
+  startParams.delete('inv');
+  const rest = startParams.toString();
+  window.history.replaceState(null, '', window.location.pathname + (rest ? `?${rest}` : '') + window.location.hash);
+}
+
 const stripAccents = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 function detectLanguage() {

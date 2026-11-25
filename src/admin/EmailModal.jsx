@@ -8,7 +8,10 @@ import * as api from './api';
 
 const LANGS = [['it', 'Italiano'], ['fr', 'Français'], ['en', 'English'], ['es', 'Español'], ['de', 'Deutsch']];
 
-const fill = (s, r) => s.replace(/\{(nome|categoria|citta)\}/g, (_, k) => (r[k] || '').trim() || '…');
+// {link}: link personale del contatto (sospro24.com/?inv=…) per sapere chi apre l'invito; per gli altri il sito
+const fill = (s, r) => s
+  .replace(/\{link\}/g, r.link || 'https://sospro24.com')
+  .replace(/\{(nome|categoria|citta)\}/g, (_, k) => (r[k] || '').trim() || '…');
 
 export default function EmailModal({ recipients, defaultTemplate = 'free', onClose, onSent }) {
   const forContacts = recipients.some((r) => r.contactId);
@@ -45,10 +48,23 @@ export default function EmailModal({ recipients, defaultTemplate = 'free', onClo
 
   const send = async () => {
     if (!valid.length || busy) return;
-    if (valid.length > 1 && !window.confirm(`Inviare ${valid.length} email una alla volta?`)) return;
+    // Mai due inviti per sbaglio: chi ha già ricevuto un'email viene escluso (o si chiede conferma)
+    let targets = valid;
+    const already = valid.filter((r) => r.emailsSent > 0);
+    if (already.length) {
+      const names = already.slice(0, 5).map((r) => r.nome || r.email).join(', ') + (already.length > 5 ? '…' : '');
+      if (already.length === valid.length) {
+        if (!window.confirm(`${already.length === 1 ? 'Ha' : 'Hanno'} già ricevuto un'email: ${names}.\n\nInviare di nuovo?`)) return;
+      } else {
+        if (!window.confirm(`${already.length} su ${valid.length} hanno già ricevuto un'email (${names}).\n\nOK = invia solo ai ${valid.length - already.length} nuovi\nAnnulla = non inviare niente`)) return;
+        targets = valid.filter((r) => !(r.emailsSent > 0));
+      }
+    }
+    if (targets.length > 1 && !window.confirm(`Inviare ${targets.length} email una alla volta?`)) return;
+    setTotal(targets.length);
     setBusy(true);
     const out = [];
-    for (const r of valid) {
+    for (const r of targets) {
       try {
         await api.sendEmail({
           to: r.email, subject: fill(subject, r), text: fill(body, r), lang,
@@ -64,7 +80,8 @@ export default function EmailModal({ recipients, defaultTemplate = 'free', onClo
     onSent?.(out);
   };
 
-  const done = results.length === valid.length && results.length > 0;
+  const [total, setTotal] = useState(0); // destinatari effettivi dell'ultimo invio
+  const done = !busy && results.length > 0;
   const okCount = results.filter((r) => r.ok).length;
 
   return (
@@ -132,8 +149,8 @@ export default function EmailModal({ recipients, defaultTemplate = 'free', onClo
       )}
 
       <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
-        {busy && <span className="text-xs text-slate-500 mr-auto">Invio {results.length + 1} di {valid.length}…</span>}
-        {done && <span className="text-sm font-semibold text-slate-700 mr-auto">Inviate {okCount} su {valid.length}</span>}
+        {busy && <span className="text-xs text-slate-500 mr-auto">Invio {results.length + 1} di {total}…</span>}
+        {done && <span className="text-sm font-semibold text-slate-700 mr-auto">Inviate {okCount} su {total}</span>}
         <Btn variant="ghost" onClick={onClose} disabled={busy}>{done ? 'Chiudi' : 'Annulla'}</Btn>
         {!done && (
           <Btn onClick={send} disabled={busy || !valid.length || subject.trim().length < 2 || body.trim().length < 10}>
