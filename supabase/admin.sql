@@ -697,6 +697,173 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------
+-- ANTEPRIMA DELL'ANNUNCIO (sospro24.com/anteprima.html?t=<token del contatto>)
+-- Il professionista invitato vede una bozza con i dati pubblici della sua attività
+-- (mai pubblicata senza di lui), la corregge e la pubblica con un click: si creano
+-- account e annuncio. Oppure preme "Non mi interessa" e non viene più contattato.
+-- ---------------------------------------------------------------------
+create or replace function private.guess_category(p text)
+returns jsonb
+language sql
+immutable
+set search_path = ''
+as $$
+  select case
+    when p ~* 'idraul|plumb' then '{"category_id":"home_sos","subcategory_id":"plumber"}'
+    when p ~* 'elettric|electric' then '{"category_id":"home_sos","subcategory_id":"electrician"}'
+    when p ~* 'fabbr|serratur|apertura porte|locksmith' then '{"category_id":"home_sos","subcategory_id":"locksmith"}'
+    when p ~* 'caldai|clima|condizion|riscald|hvac' then '{"category_id":"home_sos","subcategory_id":"hvac"}'
+    when p ~* 'tuttofare|montaggio|imbianc|tinteggi|manutenz' then '{"category_id":"home_sos","subcategory_id":"handyman"}'
+    when p ~* 'pulizi|cleaning|sanific' then '{"category_id":"care_person","subcategory_id":"cleaning"}'
+    when p ~* 'informatic|computer|smartphone|cellular|IT repair' then '{"category_id":"consulting_tech","subcategory_id":"it_repair"}'
+    else '{"category_id":"home_sos","subcategory_id":"handyman"}' end::jsonb;
+$$;
+
+create or replace function public.preview_get(p_token text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  c record;
+  v_listing uuid;
+begin
+  if p_token is null or p_token !~ '^[0-9a-f]{12,40}$' then
+    raise exception 'Link non valido';
+  end if;
+  select * into c from private.contacts where token = p_token;
+  if c.id is null then
+    raise exception 'Link non valido';
+  end if;
+  perform public.invite_open(p_token); -- conta l'apertura (o l'antivirus) come per il link dell'invito
+  if c.user_id is not null then
+    select id into v_listing from public.listings where owner_id = c.user_id order by created_at desc limit 1;
+    return jsonb_build_object('status', 'active', 'name', c.business_name, 'listing_id', v_listing);
+  end if;
+  if c.status in ('optout', 'declined') then
+    return jsonb_build_object('status', 'declined', 'name', c.business_name);
+  end if;
+  return jsonb_build_object(
+    'status', 'draft', 'name', c.business_name, 'category', c.category, 'city', c.city, 'country', c.country,
+    'phone', coalesce(c.phone, ''), 'website', coalesce(c.website, ''), 'email', coalesce(c.email, ''), 'lang', c.lang
+  ) || private.guess_category(c.category || ' ' || c.business_name);
+end;
+$$;
+
+create or replace function public.preview_activate(p_token text, p jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  c        record;
+  v_email  text := lower(btrim(coalesce(p ->> 'email', '')));
+  v_name   text := left(btrim(coalesce(p ->> 'name', '')), 80);
+  v_city   text := left(btrim(coalesce(p ->> 'city', '')), 80);
+  v_title  text := left(btrim(coalesce(p ->> 'title', '')), 110);
+  v_desc   text := left(btrim(coalesce(p ->> 'description', '')), 800);
+  v_phone  text := btrim(coalesce(p ->> 'phone', ''));
+  v_rate   numeric;
+  v_id     uuid;
+  v_new    boolean := false;
+  v_user   jsonb;
+  v_listing uuid;
+  v_mail   jsonb;
+  v_lang   text;
+begin
+  if p_token is null or p_token !~ '^[0-9a-f]{12,40}$' then
+    raise exception 'Link non valido';
+  end if;
+  select * into c from private.contacts where token = p_token for update;
+  if c.id is null then
+    raise exception 'Link non valido';
+  end if;
+  if c.user_id is not null then
+    raise exception 'Questo annuncio è già stato attivato: accedi su sospro24.com';
+  end if;
+  if coalesce(p ->> 'accept', '') <> 'true' then
+    raise exception 'Per pubblicare devi accettare le Condizioni di utilizzo';
+  end if;
+  if v_email = '' then v_email := lower(coalesce(c.email, '')); end if;
+  if v_email !~* '^[^@\s]+@[^@\s]+\.[^@\s]+$' then raise exception 'Email non valida'; end if;
+  if char_length(v_name) < 2 then raise exception 'Inserisci il nome dell''attività'; end if;
+  if v_city = '' then raise exception 'Inserisci la città'; end if;
+  if char_length(v_title) < 3 then raise exception 'Il titolo è troppo corto'; end if;
+  if char_length(v_desc) < 10 then raise exception 'La descrizione è troppo corta (almeno 10 caratteri)'; end if;
+  begin v_rate := nullif(replace(p ->> 'hourly_rate', ',', '.'), '')::numeric; exception when others then v_rate := null; end;
+  if v_rate is null or v_rate <= 0 or v_rate > 1000 then raise exception 'Indica una tariffa oraria indicativa (in euro)'; end if;
+  if v_phone <> '' and v_phone !~ '^\+?[0-9 ().-]{8,22}$' then raise exception 'Numero di telefono non valido'; end if;
+  if (p ->> 'subcategory_id') is null or (p ->> 'category_id') is null then raise exception 'Scegli la categoria'; end if;
+  v_lang := case when c.lang in ('it', 'en', 'fr', 'es', 'de') then c.lang else 'it' end;
+
+  select id into v_id from auth.users where lower(email) = v_email;
+  if v_id is not null and v_email <> lower(coalesce(c.email, '')) then
+    raise exception 'Esiste già un account con questa email: accedi su sospro24.com e pubblica da lì';
+  end if;
+  if v_id is null then
+    v_user := private.auth_admin('POST', '/admin/users', jsonb_build_object(
+      'email', v_email, 'email_confirm', true,
+      'user_metadata', jsonb_build_object('name', v_name, 'role', 'pro', 'country', upper(coalesce(c.country, 'IT')), 'city', v_city, 'lang', v_lang)));
+    v_id := (v_user ->> 'id')::uuid;
+    v_new := true;
+  end if;
+
+  insert into public.listings (owner_id, name, country, city, zone, category_id, subcategory_id, title, description,
+                               hourly_rate, call_out_fee, currency, languages, skills, sos_available)
+  values (v_id, v_name, upper(coalesce(c.country, 'IT')), v_city, coalesce(nullif(left(btrim(p ->> 'zone'), 80), ''), v_city),
+          left(p ->> 'category_id', 40), left(p ->> 'subcategory_id', 40), v_title, v_desc, v_rate, 0,
+          case upper(coalesce(c.country, 'IT')) when 'CH' then 'CHF' when 'GB' then '£' else '€' end,
+          case v_lang when 'en' then '{English}' when 'fr' then '{Français}' when 'es' then '{Español}' when 'de' then '{Deutsch}' else '{Italiano}' end::text[],
+          '{}', coalesce((p ->> 'sos')::boolean, false))
+  returning id into v_listing;
+  if v_phone <> '' then
+    insert into public.listing_contacts (listing_id, phone) values (v_listing, v_phone);
+  end if;
+  update private.contacts set user_id = v_id, status = 'published', email = coalesce(email, v_email) where id = c.id;
+
+  if v_new then
+    begin
+      v_mail := private.send_welcome(v_id, c.id);
+    exception when others then
+      v_mail := jsonb_build_object('ok', false, 'error', sqlerrm);
+    end;
+  end if;
+  perform private.tg_send('🎉 <b>Annuncio attivato dall''anteprima</b>' || E'\n' || private.h(v_name) || ' · ' || private.h(v_city)
+    || E'\n' || private.setting('site_url') || '/?ad=' || v_listing);
+  return jsonb_build_object('ok', true, 'listing_id', v_listing, 'new_account', v_new,
+                            'email_sent', coalesce((v_mail ->> 'ok')::boolean, false));
+end;
+$$;
+
+-- "Non mi interessa" dalla pagina di anteprima: niente più email, contatto segnato come non interessato
+create or replace function public.preview_decline(p_token text)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  c record;
+begin
+  if p_token is null or p_token !~ '^[0-9a-f]{12,40}$' then
+    return false;
+  end if;
+  select * into c from private.contacts where token = p_token;
+  if c.id is null or c.user_id is not null then
+    return false;
+  end if;
+  update private.contacts set status = 'declined' where id = c.id;
+  if c.email is not null then
+    insert into private.email_optout (email, source) values (lower(c.email), 'anteprima') on conflict do nothing;
+  end if;
+  perform private.tg_send('🙅 Non interessato (anteprima): ' || private.h(c.business_name) || coalesce(' · ' || private.h(nullif(c.city, '')), ''));
+  return true;
+end;
+$$;
+
+-- ---------------------------------------------------------------------
 -- DASHBOARD
 -- ---------------------------------------------------------------------
 create or replace function private.counts(p_from timestamptz, p_to timestamptz)
@@ -738,6 +905,7 @@ as $$
     'contacts',         (select count(*) from private.contacts),
     'contacts_invited', (select count(*) from private.contacts where status <> 'new'),
     'contacts_opened',  (select count(*) from private.contacts where clicks > 0),
+    'contacts_published', (select count(*) from private.contacts where status = 'published'),
     'unconfirmed',      (select count(*) from auth.users where email_confirmed_at is null)
   );
 $$;
@@ -1336,11 +1504,11 @@ begin
   for f in
     select p.oid::regprocedure as sig, p.proname
       from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-     where n.nspname = 'public' and (p.proname like 'admin\_%' or p.proname in ('is_admin', 'email_unsubscribe', 'invite_open', 'welcome_start'))
+     where n.nspname = 'public' and (p.proname like 'admin\_%' or p.proname in ('is_admin', 'email_unsubscribe', 'invite_open', 'welcome_start', 'preview_get', 'preview_activate', 'preview_decline'))
   loop
     execute format('revoke all on function %s from public, anon', f.sig);
     execute format('grant execute on function %s to authenticated', f.sig);
-    if f.proname in ('email_unsubscribe', 'invite_open', 'welcome_start') then
+    if f.proname in ('email_unsubscribe', 'invite_open', 'welcome_start', 'preview_get', 'preview_activate', 'preview_decline') then
       execute format('grant execute on function %s to anon', f.sig);
     end if;
   end loop;

@@ -12,6 +12,8 @@ const LANGS = [['it', 'Italiano'], ['fr', 'Français'], ['en', 'English'], ['es'
 // {categoria} e {citta} vengono tradotte nella lingua dell'email (es. "idraulici" → "fontaneros").
 const fill = (s, r, lang = 'it') => s
   .replace(/\{link\}/g, r.link || 'https://sospro24.com')
+  // {anteprima}: pagina con la bozza del suo annuncio da pubblicare con un click (solo per i contatti)
+  .replace(/\{anteprima\}/g, r.preview || 'https://sospro24.com')
   .replace(/\{(nome|categoria|citta)\}/g, (_, k) => localizeVar(k, r[k], lang) || '…');
 
 export default function EmailModal({ recipients, defaultTemplate = 'free', onClose, onSent }) {

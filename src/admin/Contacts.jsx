@@ -1,7 +1,7 @@
 // Contatti da invitare (es. professionisti trovati su PagineGialle o siti ufficiali):
 // importazione da CSV, invio dell'invito con un click, stato di ogni contatto.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Upload, Mail, UserPlus, Trash2, RefreshCw, ExternalLink, Phone, Plus, Eye } from 'lucide-react';
+import { Upload, Mail, UserPlus, Trash2, RefreshCw, ExternalLink, Phone, Plus, Eye, Link2 } from 'lucide-react';
 import { Card, Btn, Badge, Empty, Modal, Field, inputCls, inputBase, fmtDay, matches } from './ui';
 import EmailModal from './EmailModal';
 import { CreateUserModal } from './Users';
@@ -18,6 +18,9 @@ export const CONTACT_STATUS = {
   optout: ['disiscritto', 'red'],
   bounced: ['email errata', 'red'],
 };
+
+// Pagina con la bozza dell'annuncio del contatto, da pubblicare con un click (anteprima.html)
+const previewUrl = (c) => (c.token ? `https://sospro24.com/anteprima.html?t=${c.token}` : 'https://sospro24.com');
 
 export default function Contacts({ toast }) {
   const [rows, setRows] = useState(null);
@@ -52,7 +55,22 @@ export default function Contacts({ toast }) {
     emailsSent: c.emails_sent || 0,
     // Link personale: quando lo apre, il pannello segna "ha aperto l'invito" e arriva un messaggio su Telegram
     link: c.token ? `https://sospro24.com/?inv=${c.token}` : undefined,
+    preview: previewUrl(c),
   });
+
+  // Invio dell'anteprima su WhatsApp (dal tuo telefono/WhatsApp Web) o copia del link, per chi non ha email
+  const waHref = (c) => {
+    const digits = String(c.phone || '').replace(/[^\d+]/g, '').replace(/^\+/, '');
+    if (!digits) return null;
+    const intl = digits.startsWith('39') || c.country !== 'IT' ? digits : `39${digits}`;
+    // In Italia WhatsApp funziona solo sui cellulari (3xx): niente pulsante per i numeri fissi
+    if ((c.country || 'IT') === 'IT' && !/^393\d{8,9}$/.test(intl)) return null;
+    const text = `Buongiorno, sono di SOSPro24 (sospro24.com), il sito e l'app per trovare professionisti in zona. Ho preparato gratis una bozza dell'annuncio di ${c.business_name}: la può vedere e pubblicare con un click qui ${previewUrl(c)} – se non le interessa basta ignorare questo messaggio. Grazie!`;
+    return `https://wa.me/${intl}?text=${encodeURIComponent(text)}`;
+  };
+  const copyPreview = async (c) => {
+    try { await navigator.clipboard.writeText(previewUrl(c)); toast('Link dell\'anteprima copiato'); } catch { window.prompt('Copia il link:', previewUrl(c)); }
+  };
 
   const onFile = async (e) => {
     const file = e.target.files?.[0];
@@ -163,6 +181,10 @@ export default function Contacts({ toast }) {
                       <td className="px-4 py-2.5">
                         <div className="flex flex-wrap justify-end gap-1">
                           <Btn size="sm" onClick={() => setMailTo([toRecipient(c)])} disabled={!c.email || c.status === 'optout' || c.status === 'bounced'} title="Invia invito"><Mail className="w-3.5 h-3.5" /> {c.status === 'new' ? 'Invita' : ''}</Btn>
+                          {waHref(c) && !c.user_id && c.status !== 'declined' && c.status !== 'optout' && (
+                            <a href={waHref(c)} target="_blank" rel="noopener" title="Manda su WhatsApp il link all'anteprima del suo annuncio" className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white">WhatsApp</a>
+                          )}
+                          {!c.user_id && <Btn size="sm" variant="ghost" onClick={() => copyPreview(c)} title="Copia il link all'anteprima del suo annuncio (da mandare per SMS, WhatsApp, ecc.)"><Link2 className="w-3.5 h-3.5" /></Btn>}
                           <Btn size="sm" variant="ghost" onClick={() => setEdit(c)} title="Stato e note">Stato</Btn>
                           {!c.user_id && <Btn size="sm" variant="ok" onClick={() => setAccountFor(c)} title="Ha accettato: crea il suo account"><UserPlus className="w-3.5 h-3.5" /></Btn>}
                           <Btn size="sm" variant="danger" onClick={async () => { if (!window.confirm(`Togliere ${c.business_name} dai contatti?`)) return; try { await api.deleteContact(c.id); load(); } catch (e) { toast(e.message, 'error'); } }} title="Elimina"><Trash2 className="w-3.5 h-3.5" /></Btn>

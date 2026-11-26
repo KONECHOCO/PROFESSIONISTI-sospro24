@@ -3,5 +3,6 @@ Allow: /
 Disallow: /admin.html
 Disallow: /unsubscribe.html
 Disallow: /benvenuto.html
+Disallow: /anteprima.html
 
 Sitemap: https://sospro24.com/sitemap.xml

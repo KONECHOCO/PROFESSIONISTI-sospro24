@@ -103,7 +103,10 @@ Ho trovato {nome} cercando {categoria} a {citta} e vi scrivo perché stiamo apre
 
 ${appLines.it}
 
-Se vi interessa, posso creare io il profilo in pochi minuti: mi basta una risposta con zona servita, servizi, orari e un numero di telefono da mostrare. Prima della pubblicazione vi mando il testo da approvare e potete modificarlo o cancellarlo quando volete.
+👉 Per farvi risparmiare tempo ho già preparato una bozza del vostro annuncio con i dati pubblici della vostra attività. Non è visibile a nessuno: potete guardarla, correggerla e pubblicarla gratis con un click qui:
+{anteprima}
+
+Se preferite, rispondete a questa email e lo preparo io insieme a voi. Potete modificarlo o cancellarlo quando volete.
 
 Se non vi interessa, basta ignorare questa email: non vi scriverò di nuovo.
 
@@ -124,7 +127,10 @@ J'ai trouvé {nome} en cherchant {categoria} à {citta} et je vous écris car no
 
 ${appLines.fr}
 
-Si cela vous intéresse, je peux créer votre profil en quelques minutes : il me suffit d'une réponse avec la zone, les services, les horaires et un numéro de téléphone. Je vous envoie le texte à valider avant la publication, et vous pouvez le modifier ou le supprimer à tout moment.
+👉 Pour vous faire gagner du temps, j'ai déjà préparé un brouillon de votre annonce avec les informations publiques de votre entreprise. Personne ne le voit : vous pouvez le consulter, le corriger et le publier gratuitement en un clic ici :
+{anteprima}
+
+Si vous préférez, répondez à cet e-mail et je le prépare avec vous. Vous pouvez le modifier ou le supprimer à tout moment.
 
 Sinon, ignorez simplement cet e-mail : je ne vous écrirai plus.
 
@@ -145,7 +151,10 @@ I found {nome} while looking for {categoria} in {citta} and I'm writing because 
 
 ${appLines.en}
 
-If you're interested, I can set up your profile in a few minutes: just reply with your area, services, opening hours and a phone number to show. I'll send you the text to approve before publishing, and you can edit or delete it at any time.
+👉 To save you time, I've already prepared a draft of your listing with your business's public details. Nobody can see it: you can check it, edit it and publish it for free with one click here:
+{anteprima}
+
+If you prefer, just reply to this email and I'll set it up with you. You can edit or delete it at any time.
 
 If not, simply ignore this email: I won't write again.
 
@@ -166,7 +175,10 @@ He encontrado {nome} buscando {categoria} en {citta} y les escribo porque estamo
 
 ${appLines.es}
 
-Si les interesa, puedo crear yo el perfil en pocos minutos: me basta una respuesta con la zona que cubren, los servicios, el horario y un número de teléfono para mostrar. Antes de publicarlo les envío el texto para que lo aprueben, y pueden modificarlo o eliminarlo cuando quieran.
+👉 Para ahorrarles tiempo, ya he preparado un borrador de su anuncio con los datos públicos de su negocio. Nadie lo ve: pueden revisarlo, corregirlo y publicarlo gratis con un clic aquí:
+{anteprima}
+
+Si lo prefieren, respondan a este correo y lo preparo con ustedes. Pueden modificarlo o eliminarlo cuando quieran.
 
 Si no les interesa, basta con ignorar este correo: no volveré a escribirles.
 
@@ -187,7 +199,10 @@ Ich habe {nome} bei der Suche nach {categoria} in {citta} gefunden und schreibe 
 
 ${appLines.de}
 
-Wenn Sie Interesse haben, erstelle ich Ihr Profil in wenigen Minuten: Antworten Sie einfach mit Einsatzgebiet, Leistungen, Öffnungszeiten und einer Telefonnummer, die angezeigt werden soll. Vor der Veröffentlichung schicke ich Ihnen den Text zur Freigabe, und Sie können ihn jederzeit ändern oder löschen.
+👉 Um Ihnen Zeit zu sparen, habe ich bereits einen Entwurf Ihrer Anzeige mit den öffentlichen Daten Ihres Betriebs vorbereitet. Niemand sieht ihn: Sie können ihn ansehen, korrigieren und mit einem Klick kostenlos veröffentlichen:
+{anteprima}
+
+Wenn Sie möchten, antworten Sie einfach auf diese E-Mail und ich erstelle ihn gemeinsam mit Ihnen. Sie können ihn jederzeit ändern oder löschen.
 
 Falls kein Interesse besteht, ignorieren Sie diese E-Mail einfach: Ich schreibe Ihnen nicht noch einmal.
 
@@ -300,6 +315,7 @@ export function fillTemplate(templateId, lang, vars) {
   const t = TEMPLATES.find((x) => x.id === templateId) || TEMPLATES[TEMPLATES.length - 1];
   const variant = t.text[lang] || t.text.it;
   const fill = (s) => s.replace(/\{link\}/g, vars.link || 'https://sospro24.com')
+    .replace(/\{anteprima\}/g, vars.preview || 'https://sospro24.com')
     .replace(/\{(nome|categoria|citta)\}/g, (_, k) => (vars[k] || '').trim() || '…');
   return { subject: fill(variant.subject), body: fill(variant.body), lang: t.text[lang] ? lang : 'it' };
 }

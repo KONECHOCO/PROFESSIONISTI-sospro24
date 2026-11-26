@@ -14,7 +14,8 @@ export default defineConfig({
         main: 'index.html',
         admin: 'admin.html',
         unsubscribe: 'unsubscribe.html',
-        benvenuto: 'benvenuto.html'
+        benvenuto: 'benvenuto.html',
+        anteprima: 'anteprima.html'
       }
     }
   }
