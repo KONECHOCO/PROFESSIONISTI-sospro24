@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Briefcase, CheckCircle2, Megaphone } from 'lucide-react';
 import { joinWaitlist, waitlistCount } from '../lib/api';
 import { fmt, countryName, categoryName } from '../lib/utils';
+import ExampleCard, { pickExamples } from './ExampleCard';
 
 // Mostrata quando la ricerca non trova nessuno: invece di perdere il cliente gli proponiamo
 // di pubblicare una richiesta (o di lasciare l'email); ai professionisti chiediamo di essere i primi.
-export default function EmptyState({ t, lang, country, city, categoryId, hasFilters, onReset, onPublish, onPublishRequest }) {
+export default function EmptyState({ t, lang, country, city, categoryId, subcategoryId = 'ALL', showExample = false, hasFilters, onReset, onPublish, onPublishRequest }) {
   const [email, setEmail] = useState('');
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -116,6 +117,27 @@ export default function EmptyState({ t, lang, country, city, categoryId, hasFilt
           <h3 className="text-lg font-extrabold">{t.beFirstTitle}</h3>
         </div>
         <p className="text-sm text-slate-200 mb-5 flex-1">{t.beFirstText}</p>
+        {showExample && (
+          <div className="mb-5">
+            <p className="text-xs font-bold uppercase tracking-wider text-blue-200 mb-2">{t.emptyExampleTitle}</p>
+            {/* Esempio dichiarato per il servizio/città cercati (o il primo servizio della categoria) */}
+            {(() => {
+              const ex = categoryId !== 'ALL' ? pickExamples(categoryId, subcategoryId)[0] : pickExamples('ALL', 'ALL')[0];
+              return (
+                <ExampleCard
+                  categoryId={ex.categoryId}
+                  subcategoryId={ex.subcategoryId}
+                  place={cityValue || (place ? countryName(place, lang) : t.exampleYourCity)}
+                  city={cityValue || null}
+                  lang={lang}
+                  t={t}
+                  onPublish={onPublish}
+                  compact
+                />
+              );
+            })()}
+          </div>
+        )}
         <button type="button" onClick={onPublish} className="self-start px-5 py-3 rounded-xl bg-white text-slate-900 hover:bg-blue-50 font-extrabold text-sm">
           {t.beFirstBtn}
         </button>

@@ -23,7 +23,8 @@ import {
   usePersistentState, loadJSON, normalizeListing, getCityOptions, getZoneOptions,
   pick, categoryName, subcategoryName, detectCountry, nearestCity, getPosition, countryName,
 } from './lib/utils';
-import { supabase, isSupabaseConfigured, SHOW_DEMO } from './lib/supabase';
+import { supabase, isSupabaseConfigured, SHOW_DEMO, SHOW_EXAMPLES } from './lib/supabase';
+import ExampleCard, { pickExamples } from './components/ExampleCard';
 import * as api from './lib/api';
 
 const CATEGORY_ICONS = { home_sos: Wrench, care_person: HeartHandshake, beauty_events: Sparkles, consulting_tech: Laptop };
@@ -1067,6 +1068,8 @@ export default function App() {
             country={selectedCountry}
             city={selectedCity}
             categoryId={selectedCategory}
+            subcategoryId={selectedSubcategory}
+            showExample={SHOW_EXAMPLES}
             hasFilters={hasFilters}
             onReset={resetAllFilters}
             onPublish={openPublish}
@@ -1093,6 +1096,34 @@ export default function App() {
           <div className="mt-8">
             <RequestCta t={t} onPublish={openPublishRequest} compact />
           </div>
+        )}
+
+        {/* Esempi dichiarati: come apparirà un annuncio. Solo dove ci sono ancora pochi annunci veri */}
+        {SHOW_EXAMPLES && view === 'pros' && loadState === 'ok' && filteredListings.length > 0 && filteredListings.length < 6 && (
+          <section className="mt-10" aria-labelledby="examples-title">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-4">
+              <div>
+                <h2 id="examples-title" className="text-lg font-extrabold text-slate-900">{t.exampleSectionTitle}</h2>
+                <p className="text-sm text-slate-600">{t.exampleSectionText}</p>
+              </div>
+              <button type="button" onClick={openPublish} className="shrink-0 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold">{t.exampleCta}</button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {pickExamples(selectedCategory, selectedSubcategory).slice(0, 8).map((x) => (
+                <ExampleCard
+                  key={x.subcategoryId}
+                  categoryId={x.categoryId}
+                  subcategoryId={x.subcategoryId}
+                  place={selectedCity !== 'ALL' ? selectedCity : selectedCountry !== 'ALL' ? countryName(selectedCountry, lang) : t.exampleYourCity}
+                  city={selectedCity !== 'ALL' ? selectedCity : null}
+                  lang={lang}
+                  t={t}
+                  onPublish={openPublish}
+                  compact
+                />
+              ))}
+            </div>
+          </section>
         )}
 
         <section className="mt-12 bg-amber-50/90 border border-amber-200 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

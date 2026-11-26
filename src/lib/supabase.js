@@ -11,3 +11,8 @@ export const supabase = isSupabaseConfigured
 
 // Annunci dimostrativi: solo se VITE_SHOW_DEMO=true (mai al lancio pubblico)
 export const SHOW_DEMO = import.meta.env.VITE_SHOW_DEMO === 'true';
+
+// Annunci DI ESEMPIO dichiarati (bollino "ESEMPIO", nessun contatto, fuori dai conteggi):
+// accesi di default; per spegnerli metti VITE_SHOW_EXAMPLES=false in .env.production e ripubblica.
+// Si nascondono da soli dove ci sono già abbastanza annunci veri (vedi App.jsx).
+export const SHOW_EXAMPLES = import.meta.env.VITE_SHOW_EXAMPLES !== 'false';
