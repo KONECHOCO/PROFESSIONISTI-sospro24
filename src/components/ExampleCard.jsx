@@ -39,6 +39,20 @@ export default function ExampleCard({ categoryId, subcategoryId, place, city, la
         </div>
         <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300 shrink-0">{t.exampleBadge}</span>
       </div>
+      {/* Foto illustrativa del servizio (Unsplash, salvata in public/examples): mani e attrezzi, non una persona "reale" */}
+      <div className="relative aspect-[16/9] bg-slate-100 overflow-hidden">
+        <img
+          src={`/examples/${sub.id}.webp`}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          width="640"
+          height="360"
+          className="w-full h-full object-cover"
+          onError={(e) => { e.currentTarget.parentElement.style.display = 'none'; }}
+        />
+        <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/55 text-white text-[10px] font-semibold">{t.examplePhoto}</span>
+      </div>
       <div className={`${compact ? 'p-4' : 'p-5'} flex-1 flex flex-col`}>
         <div className="flex items-start gap-3 mb-3">
           <div className="w-11 h-11 rounded-full bg-slate-200 border-2 border-dashed border-slate-300 shrink-0" aria-hidden="true" />
