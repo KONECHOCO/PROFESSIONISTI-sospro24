@@ -36,6 +36,12 @@ export default function Users({ toast }) {
     try { await api.sendWelcome(u.id); toast('Email di benvenuto inviata'); } catch (e) { toast(e.message, 'error'); }
   };
 
+  // Per chi non riesce a confermare l'email (spam, filtri aziendali): conferma a mano dal pannello
+  const confirm = async (u) => {
+    if (!window.confirm(`Confermare a mano l'email di ${u.email}? Potrà accedere subito con la password scelta all'iscrizione.`)) return;
+    try { await api.confirmEmail(u.id); toast('Email confermata'); load(); } catch (e) { toast(e.message, 'error'); }
+  };
+
   const del = async (u) => {
     const typed = window.prompt(`ELIMINAZIONE DEFINITIVA di ${u.email}\nProfilo, ${u.listings} annunci, ${u.requests} richieste e ${u.reviews} recensioni verranno cancellati e non si possono recuperare.\n\nScrivi ELIMINA per confermare:`);
     if (typed !== 'ELIMINA') return;
@@ -74,7 +80,11 @@ export default function Users({ toast }) {
                       <div className="font-semibold text-slate-900">{u.name || '—'} {u.is_admin && <Badge color="blue">admin</Badge>}</div>
                       <div className="text-xs text-slate-600 break-all">{u.email}</div>
                       <div className="flex flex-wrap gap-1 mt-1">
-                        {!u.confirmed && <Badge color="amber">email da confermare</Badge>}
+                        {!u.confirmed && (
+                          <button type="button" onClick={() => confirm(u)} title="Conferma a mano: potrà accedere subito con la sua password">
+                            <Badge color="amber">email da confermare · Conferma ora</Badge>
+                          </button>
+                        )}
                         {u.banned && <Badge color="red">bloccato</Badge>}
                         {u.opted_out && <Badge color="slate">no email</Badge>}
                         {u.reported > 0 && <Badge color="red">{u.reported} segnalaz.</Badge>}

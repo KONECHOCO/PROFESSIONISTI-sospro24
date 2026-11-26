@@ -154,6 +154,11 @@ export default function Contacts({ toast }) {
                             <Eye className="w-3.5 h-3.5" /> ha aperto l'invito{c.clicks > 1 ? ` (${c.clicks} volte)` : ''} · {fmtDay(c.last_click)}
                           </div>
                         )}
+                        {c.bot_clicks > 0 && !c.clicks && (
+                          <div className="mt-1 text-slate-400" title="Aperto entro 3 minuti dall'invio: di solito è l'antivirus della casella, non una persona">
+                            🤖 controllo automatico della casella
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-2.5">
                         <div className="flex flex-wrap justify-end gap-1">

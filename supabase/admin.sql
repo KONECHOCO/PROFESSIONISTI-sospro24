@@ -412,6 +412,13 @@ alter table private.contacts add column if not exists token text;
 alter table private.contacts add column if not exists clicks int not null default 0;
 alter table private.contacts add column if not exists first_click timestamptz;
 alter table private.contacts add column if not exists last_click timestamptz;
+-- Aperture entro 3 minuti dall'invio: quasi sempre antivirus/filtri della posta, non persone
+alter table private.contacts add column if not exists bot_clicks int not null default 0;
+update private.contacts
+   set bot_clicks = bot_clicks + clicks, clicks = 0, first_click = null, last_click = null
+ where clicks > 0 and last_contacted is not null
+   and first_click between last_contacted and last_contacted + interval '3 minutes'
+   and last_click <= last_contacted + interval '3 minutes';
 update private.contacts set token = encode(extensions.gen_random_bytes(9), 'hex') where token is null;
 alter table private.contacts alter column token set default encode(extensions.gen_random_bytes(9), 'hex');
 create unique index if not exists contacts_token_uidx on private.contacts (token);
@@ -427,6 +434,12 @@ declare
   c record;
 begin
   if p_token is null or p_token !~ '^[0-9a-f]{12,40}$' then
+    return;
+  end if;
+  -- Entro 3 minuti dall'invio = controllo automatico della casella: si conta a parte, senza notifica
+  update private.contacts set bot_clicks = bot_clicks + 1
+   where token = p_token and last_contacted > now() - interval '3 minutes';
+  if found then
     return;
   end if;
   update private.contacts
@@ -955,6 +968,20 @@ begin
     'type', 'recovery', 'email', w.email, 'redirect_to', private.setting('site_url') || '/'));
   update private.welcome_tokens set used_at = coalesce(used_at, now()) where token = p_token;
   return coalesce(v_link ->> 'action_link', v_link -> 'properties' ->> 'action_link');
+end;
+$$;
+
+-- Conferma a mano l'email di un account bloccato (es. l'email di conferma è finita in spam):
+-- la persona può accedere subito con la password che ha scelto all'iscrizione
+create or replace function public.admin_confirm_email(p_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform private.require_admin();
+  perform private.auth_admin('PUT', '/admin/users/' || p_id, jsonb_build_object('email_confirm', true));
 end;
 $$;
 

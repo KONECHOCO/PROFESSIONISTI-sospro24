@@ -27,7 +27,8 @@ export const sendWelcome = async (id) => {
   if (r && r.ok === false) throw new Error(r.error || 'Invio non riuscito');
   return r;
 };
-export const setBanned =(id, banned, reason) => rpc('admin_set_banned', { p_id: id, p_banned: banned, p_reason: reason || null });
+export const confirmEmail = (id) => rpc('admin_confirm_email', { p_id: id });
+export const setBanned = (id, banned, reason) => rpc('admin_set_banned', { p_id: id, p_banned: banned, p_reason: reason || null });
 export const deleteUser = (id, reason) => rpc('admin_delete_user', { p_id: id, p_reason: reason || null });
 
 export const listListings = () => rpc('admin_list_listings');

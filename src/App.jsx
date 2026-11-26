@@ -114,6 +114,9 @@ export default function App() {
   const [recovery, setRecovery] = useState(false);
   // Esito del link arrivato via email: 'confirmed' | 'expired' | null
   const [linkNotice, setLinkNotice] = useState(null);
+  // Link di conferma/recupero in attesa del click della persona: { tokenHash, type }
+  const [pendingLink, setPendingLink] = useState(null);
+  const [linkBusy, setLinkBusy] = useState(false);
 
   useEffect(() => {
     if (!supabase) return undefined;
@@ -124,7 +127,9 @@ export default function App() {
     });
 
     // Link delle email (modelli in supabase/email-templates): ?token_hash=...&type=email|recovery
-    // La verifica la fa l'app, così il link punta al nostro sito e non a supabase.co
+    // La verifica la fa l'app, così il link punta al nostro sito e non a supabase.co.
+    // Non si verifica da sola all'apertura: gli antivirus delle caselle aziendali aprono ed eseguono
+    // le pagine dei link e consumerebbero il codice monouso. Si conferma solo col pulsante.
     const params = new URLSearchParams(window.location.search);
     const tokenHash = params.get('token_hash');
     const type = params.get('type');
@@ -132,11 +137,7 @@ export default function App() {
     const cleanUrl = () => window.history.replaceState(null, '', window.location.pathname);
     if (tokenHash && type) {
       cleanUrl();
-      supabase.auth.verifyOtp({ token_hash: tokenHash, type }).then(({ error }) => {
-        if (error) setLinkNotice('expired');
-        else if (type === 'recovery') setRecovery(true);
-        else setLinkNotice('confirmed');
-      });
+      setPendingLink({ tokenHash, type });
     } else if (hashParams.get('error_code')) {
       // Vecchio formato del link (redirect di Supabase) scaduto o già usato
       cleanUrl();
@@ -146,6 +147,18 @@ export default function App() {
     }
     return () => data.subscription.unsubscribe();
   }, []);
+
+  const confirmPendingLink = async () => {
+    if (!pendingLink || linkBusy) return;
+    setLinkBusy(true);
+    const { error } = await supabase.auth.verifyOtp({ token_hash: pendingLink.tokenHash, type: pendingLink.type });
+    setLinkBusy(false);
+    const wasRecovery = pendingLink.type === 'recovery';
+    setPendingLink(null);
+    if (error) setLinkNotice('expired');
+    else if (wasRecovery) setRecovery(true);
+    else setLinkNotice('confirmed');
+  };
 
   useEffect(() => {
     if (!linkNotice) return;
@@ -1236,6 +1249,22 @@ export default function App() {
       )}
 
       {showTerms && <TermsModal lang={lang} t={t} onClose={() => setShowTerms(false)} />}
+
+      {/* Conferma email / recupero password: si completa solo col click (gli antivirus non premono pulsanti) */}
+      {pendingLink && (
+        <div className="fixed inset-0 z-[70] bg-slate-950/70 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="link-confirm-title">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center">
+            <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center mx-auto mb-3"><ShieldCheck className="w-6 h-6" /></div>
+            <h2 id="link-confirm-title" className="text-lg font-extrabold text-slate-900 mb-1">
+              {pendingLink.type === 'recovery' ? t.linkRecoveryTitle : t.linkConfirmTitle}
+            </h2>
+            <p className="text-sm text-slate-600 mb-5">{pendingLink.type === 'recovery' ? t.linkRecoveryText : t.linkConfirmText}</p>
+            <button type="button" onClick={confirmPendingLink} disabled={linkBusy} className="w-full px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-extrabold text-sm">
+              {linkBusy ? t.loading : pendingLink.type === 'recovery' ? t.linkRecoveryBtn : t.linkConfirmBtn}
+            </button>
+          </div>
+        </div>
+      )}
 
       {showSettings && (
         <SettingsModal
