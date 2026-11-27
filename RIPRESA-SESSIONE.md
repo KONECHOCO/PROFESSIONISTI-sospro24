@@ -1,67 +1,65 @@
-# SOSPro24 — riepilogo per una nuova sessione (aggiornato al 24/11/2026)
+# SOSPro24 — riepilogo per una nuova sessione (aggiornato al 27/11/2026)
 
-Da incollare/leggere all'inizio di una nuova sessione di Claude Code nella cartella `C:\Users\rebic\Desktop\master\PROFESSIONISTI`.
-Per la procedura store completa usare la skill **pubblica-app** (credenziali e script sono lì, mai chiederle all'utente).
+Da leggere all'inizio di una nuova sessione di Claude Code nella cartella `C:\Users\rebic\Desktop\master\PROFESSIONISTI`.
+Per la procedura store usare la skill **pubblica-app** (credenziali e script sono lì, mai chiederle all'utente).
 
 ## Regole dell'utente
 - Si parla in **italiano**. Utente: INZA KONE (Ikonet Solutions).
 - **Mai distribuire in Cina** (App Store: CHN esclusa; Play: tutti i paesi tranne Cina).
-- Mai scrivere password, token o chiavi nei campi o in chat. La password dell'account demo per i revisori la inserisce l'utente.
-- Conferma prima di push, build, invii in revisione e prezzi (salvo richiesta esplicita).
-- Niente dati inventati spacciati per veri: i dati di esempio vanno sempre dichiarati ("Simulazione con dati di esempio").
+- Mai scrivere password, token o chiavi nei campi o in chat. Le chiavi le incolla l'utente nel pannello (restano nel Vault di Supabase). La password dell'account demo per i revisori la inserisce l'utente. Mai stampare la password del keystore Android.
+- Conferma prima di commit/push, deploy, build store, invii in revisione, prezzi e invii di email (salvo richiesta esplicita). Schema abituale: si propone → l'utente risponde "Sì, tutto" → commit + `bash deploy/deploy.sh` + `git push origin main`.
+- **Niente dati inventati spacciati per veri**: gli esempi vanno sempre dichiarati (bollino "ESEMPIO", "Foto illustrativa").
+- Niente pubblicazione di annunci di professionisti **senza il loro consenso** (proposta rifiutata il 26/11: si usa l'anteprima opt-in, vedi sotto).
 
 ## Il progetto
-- **Web app** Vite + React + Tailwind, dati su **Supabase** (progetto `qpwdczbhazahlytvpdrb`, schema in `supabase/schema.sql`, rieseguibile; le modifiche si applicano dal SQL Editor di Supabase).
-- **Sito**: https://sospro24.com (VPS Hetzner `choco@23.88.32.156`), pubblicazione con `bash deploy/deploy.sh`. Google Search Console e Bing già configurati (non cancellare `public/google6797cf6280bde93d.html` né il meta `msvalidate.01`).
-- **App** Capacitor 8 (`com.ikonet.sospro24`): AdMob (apertura app, banner, interstitial ogni 2 azioni / 45 s), Premium non consumabile `sospro24_pro` a 2,99 €, tracciabilità ambasciatori (portale partner `ikonet_partner.py`, app `sospro24` **attiva**).
-- Repo GitHub: `KONECHOCO/PROFESSIONISTI-sospro24`, branch `main`.
+- **Web app** Vite + React + Tailwind, dati su **Supabase** (progetto `qpwdczbhazahlytvpdrb`). SQL in `supabase/schema.sql` e `supabase/admin.sql`, entrambi rieseguibili; si applicano dal SQL Editor di Supabase.
+- **Sito**: https://sospro24.com (VPS Hetzner `choco@23.88.32.156`), pubblicazione `bash deploy/deploy.sh` (fa anche la build). HSTS e CSP attivi (`deploy/nginx-sospro24.conf`; `img-src` solo `'self'`, `data:`, `blob:` e Supabase → le immagini vanno messe in `public/`).
+- Pagine (Vite multi-page, `vite.config.js`): `index.html` (sito), `admin.html` (pannello), `anteprima.html` (annuncio già pronto), `benvenuto.html` (primo accesso), `unsubscribe.html`; escluse da `robots.txt`. `/terms.html` generata da `scripts/build-terms.mjs`.
+- **App** Capacitor 8 (`com.ikonet.sospro24`): AdMob, Premium `sospro24_pro` 2,99 €, tracciabilità ambasciatori (app `sospro24` attiva nel portale partner).
+- Repo: `KONECHOCO/PROFESSIONISTI-sospro24`, branch `main` (ultimo commit `a59d2df`).
+- Funzioni: ricerca paese/città/zona/categoria, SOS 24/7, "Vicino a me", annunci con contatto diretto, recensioni, segnalazioni, Smart Match, **Bacheca Richieste** (`?view=requests`, `?req=<id>`, `?ad=<id>`), 5 lingue (it, en, fr, es, de), 6 paesi.
 
-### Funzioni principali
-Ricerca per paese/città/zona/categoria, filtro SOS 24/7, "Vicino a me", annunci dei professionisti con contatto diretto (telefono/WhatsApp solo per registrati), recensioni, segnala e blocca, Smart Match SOS, profilo, eliminazione account, 5 lingue (it, en, fr, es, de), 6 paesi.
-Premium (solo app): niente pubblicità, ricerche salvate, tema scuro, preferiti illimitati, biglietto da visita QR.
-**Bacheca Richieste** (dalla 1.1.0): i clienti pubblicano "Cerco un idraulico zona Piacenza", i professionisti rispondono.
-- Tabelle `requests` + `request_contacts`, RLS: max 3 aperte e 5 al giorno per utente, scadenza 30 giorni, telefono visibile solo ai registrati finché aperta; segnalazioni con `reports.request_id`.
-- Codice: `src/components/Requests.jsx`, `src/lib/api.js`, `src/App.jsx` (scheda Professionisti/Richieste), testi in `src/data/i18nApp.js` (chiavi `req*`).
-- Link diretti: `https://sospro24.com/?view=requests`, `?req=<id>`, `?ad=<id>`.
-- Moderazione: dal Table Editor di Supabase (`reports`; `status='removed'` su annunci o richieste).
+## Pannello amministratore — https://sospro24.com/admin.html
+- Codice `src/admin/*`, backend `supabase/admin.sql` (funzioni `admin_*` SECURITY DEFINER con `private.require_admin()`; amministratori in `private.admins`; schema `private` non esposto).
+- Sezioni: Dashboard (aperture e pubblicati inclusi), Account (crea/modifica/blocca/elimina, "Conferma ora" per email non confermate, 🔑 reinvia benvenuto), Annunci, Richieste, Segnalazioni, **Contatti da invitare** (import CSV, "Nuovo contatto", invito con un click, 🔗 copia link anteprima, WhatsApp solo per cellulari italiani, indicatori 👀 aperto / 🤖 aperto da antivirus, filtro "aperti"), Email inviate, Lista d'attesa, Impostazioni.
+- Segreti nel Vault: `sospro_sendgrid_key`, `sospro_telegram_token`, `sospro_service_key` (chiave `sb_secret_`: va solo come header `apikey`), `sospro_unsub_key`. `admin_set_secret` rifiuta chiavi sbagliate (publishable, SendGrid senza `SG.`).
+- Chiamate esterne: estensione http (`private.http_json`, timeout 8 s + 1 nuovo tentativo), pg_net per Telegram, pg_cron job `sospro24-hourly`. API Auth via `private.auth_admin`.
+- **Email** (SendGrid): mittente `supporto@ikonetsolutions.com`, Reply-To `supporto@sospro24.com` → inoltro Namecheap a konechoco@gmail.com. SMTP di Supabase Auth = SendGrid (mittente `supporto@sospro24.com`, DKIM ok). Ogni email ha piè di pagina con disiscrizione (token HMAC). Firma: Ikonet Solutions / SOSPro24, tel. e WhatsApp +39 329 618 5600, link App Store e Play.
+- Inviti: modelli in 5 lingue in `src/admin/templates.js` con variabili `{nome}`, `{categoria}`, `{citta}` (tradotte nella lingua dell'email), `{link}` (link personale `?inv=<token>` → `invite_open`), `{anteprima}`. Aperture entro 3 minuti dall'invio = antivirus (`bot_clicks`, niente Telegram).
+- **Anti-antivirus** (Microsoft 365/Barracuda aprono i link): nessun link monouso si consuma all'apertura. Benvenuto → `benvenuto.html` con pulsante (`welcome_start`); link di conferma dell'app (`token_hash`) → finestra con pulsante.
+- **Anteprima opt-in** (`anteprima.html`, `src/preview/main.jsx`): il professionista vede il suo annuncio già compilato, lo corregge e lo pubblica con un click (`preview_get` / `preview_activate` crea account + annuncio + benvenuto + Telegram 🎉; `preview_decline` per rifiutare). Prova locale: `?mock`.
+- Telegram: notifiche in tempo reale + riepilogo mattutino.
+- Prova locale senza database: `npm run dev` → `http://localhost:5173/admin.html?mock`.
+- **Test SQL**: `cd supabase/tests && npm install && npm test` (PGlite con estensioni simulate; ultimo esito 95/95).
 
-### Pannello amministratore (dal 24/11/2026)
-- **https://sospro24.com/admin.html** (accesso con l'account SOSPro24; amministratori in `private.admins`). Sezioni: Dashboard, Account (crea/modifica/blocca/elimina, crea annuncio per conto del professionista), Annunci, Richieste, Segnalazioni, Contatti da invitare (import CSV, invito con un click), Email inviate, Lista d'attesa, Impostazioni.
-- Database: `supabase/admin.sql` (già eseguito il 24/11, rieseguibile). Funzioni `admin_*` che controllano l'amministratore; schema `private` non esposto; estensioni http, pg_net, pg_cron, Vault.
-- Chiavi (SendGrid — stesso account di IT Helpdesk/ambasciatori —, token bot Telegram, chiave di servizio Supabase) si incollano nel pannello → Impostazioni e restano cifrate nel Vault: **mai in chat né nel codice**.
-- Email: mittente predefinito `supporto@ikonetsolutions.com` (verificato su SendGrid), risposte a `supporto@sospro24.com`; piè di pagina con chi siamo + link di disiscrizione (`/unsubscribe.html`); limite giornaliero nelle impostazioni.
-- Telegram: notifiche in tempo reale (registrazioni, annunci, richieste, segnalazioni, recensioni) + riepilogo ogni mattina (ora scelta nel pannello).
-- Prova locale senza database: `npm run dev` → `http://localhost:5173/admin.html?mock` (dati finti, esclusi dalla build).
-- Contatti da invitare: `C:\Users\rebic\Downloads\sospro24-contatti-italia-paginegialle.csv` (131 attività, 53 email) e `sospro24_contatti_professionisti_120.csv` (estero, in pausa).
+### Lavorare da Claude (procedure già usate)
+- **Applicare SQL su Supabase**: in Chrome, SQL Editor del progetto; impostare il testo dell'editor Monaco via `javascript_tool` (`String.raw`, solo se il testo non contiene backtick o `${`), verificare lunghezza e hash rispetto al file, poi Run con click via JS. Le schede Chrome in background possono bloccarsi → aprirne una nuova.
+- **Chiamare le funzioni admin da Chrome**: nella scheda `admin.html` leggere la sessione da `localStorage` (`sb-*-auth-token`), trovare la chiave `sb_publishable_` nei file JS caricati (anche `modulepreload`), poi `fetch` a `/rest/v1/rpc/<funzione>`. Dopo un deploy ricaricare la pagina admin (i vecchi file vengono cancellati).
+- Server di prova: `.claude/launch.json` → `sospro` (5173, ma la porta può essere occupata da altri progetti), `sospro-demo` (5175, con annunci demo), `sospro-csp` (5180, con CSP del server).
 
-### Strategia (24/11)
-Tutti i 6 paesi restano aperti; il reclutamento manuale dei professionisti parte dall'Italia (iscrizione assistita: invito → consenso → account + annuncio creati dal pannello). Analisi di Manus AI in `C:\Users\rebic\Downloads\main.pdf`.
-Testi del sito resi neutri ("professionisti", non più al femminile); pagina vera `/terms.html` generata da `scripts/build-terms.mjs` a ogni build; HSTS e CSP scritti in `deploy/nginx-sospro24.conf` (vanno applicati sul server con sudo).
+## Situazione al 27/11/2026
+- **Contatti**: 895 (Italia: Piacenza, Parma, Cremona, Lodi, Reggio Emilia e altre; più estero in pausa). Tutti i 335 con email sono stati invitati (332 "invited", 1 "consented", 2 disiscritti); 560 senza email (solo telefono → WhatsApp/telefonata).
+- Email inviate: 509 negli ultimi 7 giorni (217 il 27/11), nessun errore SendGrid.
+- Aperture vere: 4 (Avanzi Nicola Tinteggiature – Soresina; BEMA JUNIOR – Piacenza; Elektro Eichler e Scholz Elektrotechnik – Berlino).
+- **Account**: 5 (3 pro, 2 clienti). BEMA JUNIOR (informatico, Piacenza, account del 25/11) e Simone Orlandini (Saimon Impianti, 23/11, confermato a mano) **non hanno ancora pubblicato l'annuncio**. Unico annuncio attivo: quello di Ikonet (Piacenza).
+- **Sito**: annunci di esempio dichiarati (bollino ESEMPIO, nome fittizio, tariffa d'esempio, nessun contatto, fuori dai conteggi, pulsante "Pubblica il tuo annuncio gratis") con **foto illustrative** (20 foto Unsplash in `public/examples/<sottocategoria>.webp`). In home sotto i risultati quando gli annunci veri sono meno di 6; nelle zone vuote uno con titolo "Servizio a Città". Codice: `src/components/ExampleCard.jsx`, `EmptyState.jsx`, `App.jsx`. Spegnere: `VITE_SHOW_EXAMPLES=false` in `.env.production` e ripubblicare.
 
-## Stato store
+## Stato store (al 24/11, da riverificare)
 | Store | Stato |
 |---|---|
-| **App Store** (app id `6836977205`) | **1.1.0 in vendita** (con Richieste) + Premium approvato. Tutti i paesi tranne Cina. https://apps.apple.com/app/id6836977205 |
-| **Google Play** (developer `5589065625633699180`, app `4972074224714168006`) | Solo **test chiuso**: canale "Alpha" (lista `tester4`) e "Community" (gruppo `testers-community@googlegroups.com`), 177 paesi senza Cina. 1.0.0 approvata; **1.1.0 (versionCode 2) inviata in revisione il 22/11** — da verificare. Scheda Play: descrizione ancora senza la sezione Richieste. |
+| **App Store** (app id `6836977205`) | **1.1.0 in vendita** + Premium approvato. Tutti i paesi tranne Cina. |
+| **Google Play** (developer `5589065625633699180`, app `4972074224714168006`) | Solo **test chiuso** (Alpha `tester4` + Community `testers-community@googlegroups.com`). 1.1.0 (versionCode 2) inviata in revisione il 22/11 — esito da verificare. |
 
-Link tester Android: prima https://groups.google.com/g/testers-community, poi https://play.google.com/apps/testing/com.ikonet.sospro24
-
-### Build
-- **iOS**: Codemagic, app `6aff6905f3bfce05eff65c54`, workflow `ios-app-store` (numero build automatico). Poi `ikonet_asc.py attach-build` e `submit --send`.
-- **Android**: AAB in locale con lo script di firma (keystore e password in `C:\Users\rebic\Desktop\master\SOSPRO24_ANDROID_SIGNING\`, **mai stampare la password**): `npm run build`, `cap sync android` con Node 22, poi gradle `bundleRelease` con `BUILD_NUMBER` = versionCode successivo (prossimo: **3**). ABI solo ARM (AAB < 10 MB).
-- Versione attuale: **1.1.0** (`package.json`, `android/app/build.gradle`, `MARKETING_VERSION` in `ios/App/App.xcodeproj/project.pbxproj`, `APP_VERSION` in `src/services/referral.js`).
-- Testi store in 5 lingue: `store-assets/listing.json` (con `whatsNew`), controllo limiti `node scripts/check-listing.mjs`.
-
-## Marketing già pronto (`marketing/`)
-- `social/post-social.md` + 4 immagini 1080×1350 (`scripts/capture-social.mjs`).
-- `social/post-storia.md`: la storia del fondatore (termosifone di domenica) in 4 versioni.
-- `heygen/tutorial-heygen.md` + 16 scene 16:9 (`scripts/capture-heygen.mjs`, server demo `sospro-demo` in `.claude/launch.json`, porta 5175, con `VITE_SHOW_DEMO=true`; richieste e utente simulati solo nel browser di Playwright).
-- `prompt-claude-design.md`, screenshot store in `store-assets/screenshots/`.
+- Build iOS: Codemagic app `6aff6905f3bfce05eff65c54`, workflow `ios-app-store`, poi `ikonet_asc.py attach-build` e `submit --send`.
+- Build Android: AAB locale (firma in `C:\Users\rebic\Desktop\master\SOSPRO24_ANDROID_SIGNING\`), Node 22 per `cap sync`, prossimo versionCode **3**, solo ABI ARM.
+- Versione 1.1.0 in `package.json`, `android/app/build.gradle`, `MARKETING_VERSION` (pbxproj), `APP_VERSION` in `src/services/referral.js`. Testi store: `store-assets/listing.json` (`node scripts/check-listing.mjs`).
+- Marketing pronto in `marketing/` (post social, storia del fondatore, tutorial HeyGen 16 scene).
 
 ## Da fare / idee aperte
-1. Verificare l'esito della revisione Play 1.1.0; aggiornare la **descrizione della scheda Play** in 5 lingue con la sezione Richieste.
-2. Inserire (utente) la password dell'account demo in Play Console → Contenuti app → Dettagli di accesso, se non già fatto.
-3. **AdMob → Aggiungi negozio** per l'app iOS (`~6115555936`): il 22/11 AdMob non trovava ancora l'app; riprovare. Per Android dopo l'uscita in produzione.
-4. Produzione su Google Play dopo 12 tester attivi per 14 giorni consecutivi.
-5. Facoltativo: notifiche ai professionisti quando arriva una richiesta nella loro città/categoria (email o push); scena verticale 9:16 per Reel/TikTok.
-6. Raccogliere i suggerimenti degli utenti dopo i post e trasformarli in aggiornamenti (prossima versione 1.2.0, versionCode 3).
+1. **Seguire BEMA JUNIOR e Simone Orlandini** (account senza annuncio): telefonata/WhatsApp o email con il link anteprima per pubblicare.
+2. Ricontattare chi ha aperto (Avanzi Nicola, Berlino ×2).
+3. Promemoria facoltativo agli invitati con il link anteprima (non ancora inviato; chiedere conferma prima).
+4. I 560 contatti senza email: contatto via WhatsApp (pulsante nel pannello, solo cellulari) o telefono.
+5. Trovare altri professionisti (fonte usata: PagineGialle, trasferimento dati tra schede via `window.name`).
+6. Store: esito revisione Play 1.1.0, descrizione Play con sezione Richieste, AdMob "Aggiungi negozio" iOS, produzione Play dopo 12 tester × 14 giorni.
+7. Prossima versione app 1.2.0 (versionCode 3) quando ci saranno novità da portare nell'app (gli esempi e l'anteprima sono solo sul sito).

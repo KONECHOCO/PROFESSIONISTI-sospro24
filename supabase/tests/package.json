@@ -1,0 +1,7 @@
+{
+  "name": "sospro24-sql-tests",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node admin.test.mjs" },
+  "dependencies": { "@electric-sql/pglite": "^0.2.17" }
+}
